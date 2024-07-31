@@ -45,20 +45,6 @@ public class MesaService {
 
         return mapToDTO(savedMesa);
     }
-/*
-    public MesaDTO updateMesa(UUID id, MesaDTO mesaDTO) {
-        Mesa mesa = mesaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
-
-        mesa.setQtdAssentosMax(mesaDTO.getQtdAssentosMax());
-        mesa.setInfoAdicional(mesaDTO.getInfoAdicional());
-
-        Mesa updatedMesa = mesaRepository.save(mesa);
-        saveMesaHistory(updatedMesa, "UPDATE");
-
-        return mapToDTO(updatedMesa);
-    }
-*/
     public List<MesaDTO> getAllMesas() {
         List<Mesa> mesas = mesaRepository.findAll();
         return mesas.stream()
