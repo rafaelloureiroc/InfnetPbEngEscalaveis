@@ -67,7 +67,12 @@ public class ReservaService {
         notificationRequest.setTo("rafaelloureiro2002@gmail.com");
         notificationRequest.setSubject("Nova Reserva Criada");
         notificationRequest.setBody("Uma nova reserva foi criada.");
-        notificationClient.sendNotification(notificationRequest);
+
+        try {
+            notificationClient.sendNotification(notificationRequest);
+        } catch (Exception e) {
+            System.err.println("Falha ao comunicar com serviço " + e.getMessage());
+        }
 
         return mapToDTO(savedReserva);
     }

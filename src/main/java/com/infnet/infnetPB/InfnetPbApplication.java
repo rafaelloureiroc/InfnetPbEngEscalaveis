@@ -9,7 +9,6 @@ import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 @SpringBootApplication
 @EnableFeignClients(basePackages = "com.infnet.infnetPB.client")
 @ImportAutoConfiguration({FeignAutoConfiguration.class})
-
 public class InfnetPbApplication {
 
 	public static void main(String[] args) {
