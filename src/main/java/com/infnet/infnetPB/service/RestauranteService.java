@@ -1,6 +1,7 @@
 package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.RestauranteDTO;
+import com.infnet.infnetPB.model.Cep;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.model.history.RestauranteHistory;
 import com.infnet.infnetPB.repository.RestauranteRepository;
@@ -10,25 +11,45 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class RestauranteService {
 
+    private static final Logger logger = LoggerFactory.getLogger(RestauranteService.class);
+
     @Autowired
-    private  RestauranteRepository restauranteRepository;
+    private RestauranteRepository restauranteRepository;
 
     @Autowired
     private RestauranteHistoryRepository restauranteHistoryRepository;
 
+    @Autowired
+    private CepService cepService;
+
     @Transactional
     public RestauranteDTO createRestaurante(RestauranteDTO restauranteDTO) {
         Restaurante restaurante = new Restaurante();
-        BeanUtils.copyProperties(restauranteDTO, restaurante);
+        restaurante.setNome(restauranteDTO.getNome());
+        restaurante.setCep(restauranteDTO.getCep());
+
+        Optional<Cep> cepDetails = cepService.getCepDetails(restauranteDTO.getCep());
+        if (cepDetails.isPresent()) {
+            Cep cep = cepDetails.get();
+            restaurante.setLogradouro(cep.getLogradouro());
+            restaurante.setBairro(cep.getBairro());
+            restaurante.setCidade(cep.getLocalidade());
+            restaurante.setUf(cep.getUf());
+        } else {
+            logger.warn("CEP não encontrado ou inválido: {}", restauranteDTO.getCep());
+        }
+
         Restaurante savedRestaurante = restauranteRepository.save(restaurante);
         saveRestauranteHistory(savedRestaurante, "CREATE");
         return convertToDTO(savedRestaurante);
@@ -45,7 +66,6 @@ public class RestauranteService {
     @Transactional
     public void deleteRestauranteById(UUID id) {
         restauranteRepository.deleteById(id);
-
     }
 
     public List<RestauranteHistory> getAllRestauranteHistories() {
@@ -56,7 +76,10 @@ public class RestauranteService {
         RestauranteHistory history = new RestauranteHistory();
         history.setRestaurante(restaurante);
         history.setNome(restaurante.getNome());
-        history.setLocalizacao(restaurante.getLocalizacao());
+        history.setLogradouro(restaurante.getLogradouro());
+        history.setBairro(restaurante.getBairro());
+        history.setCidade(restaurante.getCidade());
+        history.setUf(restaurante.getUf());
         history.setTimestamp(LocalDateTime.now());
         history.setOperation(operation);
         restauranteHistoryRepository.save(history);

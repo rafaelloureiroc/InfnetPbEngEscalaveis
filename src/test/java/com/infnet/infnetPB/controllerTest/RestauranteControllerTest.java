@@ -54,15 +54,25 @@ public class RestauranteControllerTest {
         UUID restauranteId = UUID.randomUUID();
         restauranteDTO.setId(restauranteId);
         restauranteDTO.setNome("Restaurante 1");
+        restauranteDTO.setCep("24355210");
+        restauranteDTO.setLogradouro("Rua A");
+        restauranteDTO.setBairro("Bairro B");
+        restauranteDTO.setCidade("Cidade C");
+        restauranteDTO.setUf("UF");
 
         when(restauranteService.createRestaurante(any(RestauranteDTO.class))).thenReturn(restauranteDTO);
 
         mockMvc.perform(post("/restaurantes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"" + restauranteId + "\",\"nome\":\"Restaurante 1\"}"))
+                        .content("{\"id\":\"" + restauranteId + "\",\"nome\":\"Restaurante 1\",\"cep\":\"24355210\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(restauranteId.toString()))
-                .andExpect(jsonPath("$.nome").value("Restaurante 1"));
+                .andExpect(jsonPath("$.nome").value("Restaurante 1"))
+                .andExpect(jsonPath("$.cep").value("24355210"))
+                .andExpect(jsonPath("$.logradouro").value("Rua A"))
+                .andExpect(jsonPath("$.bairro").value("Bairro B"))
+                .andExpect(jsonPath("$.cidade").value("Cidade C"))
+                .andExpect(jsonPath("$.uf").value("UF"));
     }
 
     @Test
@@ -71,11 +81,21 @@ public class RestauranteControllerTest {
         UUID restauranteId1 = UUID.randomUUID();
         restaurante1.setId(restauranteId1);
         restaurante1.setNome("Restaurante 1");
+        restaurante1.setCep("24355210");
+        restaurante1.setLogradouro("Rua A");
+        restaurante1.setBairro("Bairro B");
+        restaurante1.setCidade("Cidade C");
+        restaurante1.setUf("UF");
 
         RestauranteDTO restaurante2 = new RestauranteDTO();
         UUID restauranteId2 = UUID.randomUUID();
         restaurante2.setId(restauranteId2);
         restaurante2.setNome("Restaurante 2");
+        restaurante2.setCep("24355211");
+        restaurante2.setLogradouro("Rua D");
+        restaurante2.setBairro("Bairro E");
+        restaurante2.setCidade("Cidade F");
+        restaurante2.setUf("UF");
 
         List<RestauranteDTO> restauranteList = Arrays.asList(restaurante1, restaurante2);
 
@@ -85,8 +105,18 @@ public class RestauranteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(restauranteId1.toString()))
                 .andExpect(jsonPath("$[0].nome").value("Restaurante 1"))
+                .andExpect(jsonPath("$[0].cep").value("24355210"))
+                .andExpect(jsonPath("$[0].logradouro").value("Rua A"))
+                .andExpect(jsonPath("$[0].bairro").value("Bairro B"))
+                .andExpect(jsonPath("$[0].cidade").value("Cidade C"))
+                .andExpect(jsonPath("$[0].uf").value("UF"))
                 .andExpect(jsonPath("$[1].id").value(restauranteId2.toString()))
-                .andExpect(jsonPath("$[1].nome").value("Restaurante 2"));
+                .andExpect(jsonPath("$[1].nome").value("Restaurante 2"))
+                .andExpect(jsonPath("$[1].cep").value("24355211"))
+                .andExpect(jsonPath("$[1].logradouro").value("Rua D"))
+                .andExpect(jsonPath("$[1].bairro").value("Bairro E"))
+                .andExpect(jsonPath("$[1].cidade").value("Cidade F"))
+                .andExpect(jsonPath("$[1].uf").value("UF"));
     }
 
     @Test

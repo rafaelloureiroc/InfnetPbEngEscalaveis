@@ -1,6 +1,7 @@
 package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.ReservaDTO;
+import com.infnet.infnetPB.client.NotificationClient;
 import com.infnet.infnetPB.model.Mesa;
 import com.infnet.infnetPB.model.Reserva;
 import com.infnet.infnetPB.model.Restaurante;
@@ -25,17 +26,27 @@ import java.util.stream.Collectors;
 public class ReservaService {
 
     @Autowired
-    private  ReservaRepository reservaRepository;
+    private ReservaRepository reservaRepository;
+
     @Autowired
-    private  RestauranteRepository restauranteRepository;
+    private RestauranteRepository restauranteRepository;
+
     @Autowired
-    private  MesaRepository mesaRepository;
+    private MesaRepository mesaRepository;
+
     @Autowired
     private ReservaHistoryRepository reservaHistoryRepository;
+
+    @Autowired
+    private NotificationClient notificationClient;
 
     public ReservaDTO createReserva(ReservaDTO reservaDTO) {
         Optional<Mesa> mesaOptional = mesaRepository.findById(reservaDTO.getMesaId());
         Mesa mesa = mesaOptional.orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
+
+        if (mesa.getReserva() != null) {
+            throw new RuntimeException("A mesa já está reservada");
+        }
 
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(reservaDTO.getRestauranteId());
         Restaurante restaurante = restauranteOptional.orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
@@ -52,8 +63,15 @@ public class ReservaService {
         mesa.setReserva(savedReserva);
         mesaRepository.save(mesa);
 
+        NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
+        notificationRequest.setTo("rafaelloureiro2002@gmail.com");
+        notificationRequest.setSubject("Nova Reserva Criada");
+        notificationRequest.setBody("Uma nova reserva foi criada.");
+        notificationClient.sendNotification(notificationRequest);
+
         return mapToDTO(savedReserva);
     }
+
     public List<ReservaDTO> getAllReservas() {
         List<Reserva> reservas = reservaRepository.findAll();
         return reservas.stream()

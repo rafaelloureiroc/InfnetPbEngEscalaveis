@@ -9,5 +9,9 @@ public class RestauranteDTO {
 
     private UUID id;
     private String nome;
-    private String localizacao;
+    private String cep;
+    private String logradouro;
+    private String bairro;
+    private String cidade;
+    private String uf;
 }

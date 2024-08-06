@@ -85,7 +85,9 @@ public class MesaService {
         mesaDTO.setId(mesa.getId());
         mesaDTO.setQtdAssentosMax(mesa.getQtdAssentosMax());
         mesaDTO.setInfoAdicional(mesa.getInfoAdicional());
+        mesaDTO.setNomeRestaurante(mesa.getRestaurante().getNome());
         mesaDTO.setRestauranteId(mesa.getRestaurante().getId());
+
         return mesaDTO;
     }
 
