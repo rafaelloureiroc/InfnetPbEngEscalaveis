@@ -28,9 +28,12 @@ const CadastrarMesa = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        const restauranteSelecionado = restaurantes.find(r => r.id === nomeRestaurante);
+        const infoAdicionalComRestaurante = `Restaurante: ${restauranteSelecionado?.nome} - ${infoAdicional} `;
+
         const mesaData = {
             qtdAssentosMax: parseInt(qtdAssentosMax),
-            infoAdicional: infoAdicional,
+            infoAdicional: infoAdicionalComRestaurante,
             restauranteId: nomeRestaurante
         };
 

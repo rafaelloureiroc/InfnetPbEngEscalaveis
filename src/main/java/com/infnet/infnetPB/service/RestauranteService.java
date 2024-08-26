@@ -1,11 +1,13 @@
 package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.RestauranteDTO;
+import com.infnet.infnetPB.event.RestauranteCadastradoEvent;
 import com.infnet.infnetPB.model.Cep;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.model.history.RestauranteHistory;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.repository.historyRepository.RestauranteHistoryRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,9 @@ public class RestauranteService {
     @Autowired
     private CepService cepService;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @Transactional
     public RestauranteDTO createRestaurante(RestauranteDTO restauranteDTO) {
         Restaurante restaurante = new Restaurante();
@@ -52,6 +57,21 @@ public class RestauranteService {
 
         Restaurante savedRestaurante = restauranteRepository.save(restaurante);
         saveRestauranteHistory(savedRestaurante, "CREATE");
+        RestauranteCadastradoEvent event = new RestauranteCadastradoEvent(
+                savedRestaurante.getId(),
+                savedRestaurante.getNome(),
+                savedRestaurante.getCep(),
+                savedRestaurante.getLogradouro(),
+                savedRestaurante.getBairro(),
+                savedRestaurante.getCidade(),
+                savedRestaurante.getUf()
+        );
+        try{
+            rabbitTemplate.convertAndSend("restauranteExchange", "restauranteCadastrado", event);
+        } catch (Exception e){
+            System.err.println("(Restaurante) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+        }
+
         return convertToDTO(savedRestaurante);
     }
 

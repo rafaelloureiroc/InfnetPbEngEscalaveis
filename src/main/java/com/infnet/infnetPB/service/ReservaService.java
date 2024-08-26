@@ -2,6 +2,7 @@ package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.ReservaDTO;
 import com.infnet.infnetPB.client.NotificationClient;
+import com.infnet.infnetPB.event.MesaReservadaEvent;
 import com.infnet.infnetPB.model.Mesa;
 import com.infnet.infnetPB.model.Reserva;
 import com.infnet.infnetPB.model.Restaurante;
@@ -10,6 +11,7 @@ import com.infnet.infnetPB.repository.MesaRepository;
 import com.infnet.infnetPB.repository.ReservaRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.repository.historyRepository.ReservaHistoryRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 @Service
 @Transactional
 public class ReservaService {
@@ -40,12 +41,15 @@ public class ReservaService {
     @Autowired
     private NotificationClient notificationClient;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     public ReservaDTO createReserva(ReservaDTO reservaDTO) {
         Optional<Mesa> mesaOptional = mesaRepository.findById(reservaDTO.getMesaId());
         Mesa mesa = mesaOptional.orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
 
         if (mesa.getReserva() != null) {
-            throw new RuntimeException("A mesa já está reservada");
+            throw new RuntimeException("A Mesa já está reservada");
         }
 
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(reservaDTO.getRestauranteId());
@@ -63,6 +67,15 @@ public class ReservaService {
         mesa.setReserva(savedReserva);
         mesaRepository.save(mesa);
 
+        MesaReservadaEvent event = new MesaReservadaEvent(
+                mesa.getId(),
+                restaurante.getId(),
+                reserva.getDataReserva());
+        try {
+            rabbitTemplate.convertAndSend("mesaExchange", "mesaReservada", event);
+        } catch (Exception e){
+            System.err.println("(MesaReserva) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+        }
         NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
         notificationRequest.setTo("rafaelloureiro2002@gmail.com");
         notificationRequest.setSubject("Nova Reserva Criada");
@@ -71,7 +84,7 @@ public class ReservaService {
         try {
             notificationClient.sendNotification(notificationRequest);
         } catch (Exception e) {
-            System.err.println("Falha ao comunicar com serviço " + e.getMessage());
+            System.err.println("Falha ao comunicar com serviço de notificação: " + e.getMessage());
         }
 
         return mapToDTO(savedReserva);

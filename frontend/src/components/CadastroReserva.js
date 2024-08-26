@@ -8,6 +8,7 @@ const CadastrarReserva = () => {
     const [restauranteId, setRestauranteId] = useState('');
     const [mesaId, setMesaId] = useState('');
     const [capacidadeMesa, setCapacidadeMesa] = useState(null);
+    const [filteredMesas, setFilteredMesas] = useState([]);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
@@ -52,6 +53,15 @@ const CadastrarReserva = () => {
             }
         }
     }, [mesaId, mesas]);
+
+    useEffect(() => {
+        if (restauranteId) {
+            const mesasDoRestaurante = mesas.filter((mesa) => mesa.restauranteId === restauranteId);
+            setFilteredMesas(mesasDoRestaurante);
+        } else {
+            setFilteredMesas([]);
+        }
+    }, [restauranteId, mesas]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -141,7 +151,7 @@ const CadastrarReserva = () => {
                         required
                     >
                         <option value="">Selecione uma mesa</option>
-                        {mesas.map((mesa) => (
+                        {filteredMesas.map((mesa) => (
                             <option key={mesa.id} value={mesa.id}>
                                 {mesa.infoAdicional} (Capacidade: {mesa.qtdAssentosMax})
                             </option>

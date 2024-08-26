@@ -2,12 +2,14 @@ package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.MesaDTO;
 import com.infnet.infnetPB.DTO.PedidoDTO;
+import com.infnet.infnetPB.event.MesaCadastradaEvent;
 import com.infnet.infnetPB.model.history.MesaHistory;
 import com.infnet.infnetPB.model.Pedido;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.repository.historyRepository.MesaHistoryRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.infnet.infnetPB.repository.MesaRepository;
@@ -30,6 +32,8 @@ public class MesaService {
     private RestauranteRepository restauranteRepository;
     @Autowired
     private MesaHistoryRepository mesaHistoryRepository;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     public MesaDTO createMesa(MesaDTO mesaDTO) {
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(mesaDTO.getRestauranteId());
@@ -42,6 +46,20 @@ public class MesaService {
 
         Mesa savedMesa = mesaRepository.save(mesa);
         saveMesaHistory(savedMesa, "CREATE");
+
+        MesaCadastradaEvent event = new MesaCadastradaEvent(
+                savedMesa.getId(),
+                restaurante.getId(),
+                savedMesa.getQtdAssentosMax(),
+                savedMesa.getInfoAdicional(),
+                "CREATED"
+        );
+
+        try {
+            rabbitTemplate.convertAndSend("mesaExchange", "mesaCadastrada", event);
+        } catch (Exception e) {
+            System.err.println("(MesaCadastro) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+        }
 
         return mapToDTO(savedMesa);
     }

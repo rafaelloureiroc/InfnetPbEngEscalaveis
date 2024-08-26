@@ -1,6 +1,7 @@
 package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.PedidoDTO;
+import com.infnet.infnetPB.event.PedidoCriadoEvent;
 import com.infnet.infnetPB.model.Mesa;
 import com.infnet.infnetPB.model.Pedido;
 import com.infnet.infnetPB.model.history.PedidoHistory;
@@ -9,6 +10,7 @@ import com.infnet.infnetPB.repository.MesaRepository;
 import com.infnet.infnetPB.repository.historyRepository.PedidoHistoryRepository;
 import com.infnet.infnetPB.repository.PedidoRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,12 +38,19 @@ public class PedidoService {
     @Autowired
     private PedidoHistoryRepository pedidoHistoryRepository;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     public PedidoDTO createPedido(PedidoDTO pedidoDTO) {
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(pedidoDTO.getRestauranteId());
         Restaurante restaurante = restauranteOptional.orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
 
         Optional<Mesa> mesaOptional = mesaRepository.findById(pedidoDTO.getMesaId());
         Mesa mesa = mesaOptional.orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
+
+        if (mesa.getPedido() != null) {
+            throw new RuntimeException("A Mesa já tem um pedido criado.");
+        }
 
         Pedido pedido = new Pedido();
         pedido.setDescricaoPedido(pedidoDTO.getDescricaoPedido());
@@ -50,7 +59,21 @@ public class PedidoService {
         pedido.setMesa(mesa);
 
         Pedido savedPedido = pedidoRepository.save(pedido);
+
         savePedidoHistory(savedPedido, "CREATE");
+
+        PedidoCriadoEvent event = new PedidoCriadoEvent(
+                savedPedido.getId(),
+                savedPedido.getDescricaoPedido(),
+                savedPedido.getValorTotal(),
+                savedPedido.getMesa().getId(),
+                savedPedido.getRestaurante().getId()
+        );
+        try {
+            rabbitTemplate.convertAndSend("pedidoExchange", "pedidoCriado", event);
+        } catch (Exception e) {
+            System.err.println("(Pedido) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+        }
 
         return mapToDTO(savedPedido);
     }
