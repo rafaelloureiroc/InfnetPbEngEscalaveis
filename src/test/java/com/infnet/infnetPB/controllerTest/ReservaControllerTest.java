@@ -79,7 +79,6 @@ public class ReservaControllerTest {
 
     @Test
     public void testCreateReserva() throws Exception {
-        // Preparando os dados de entrada
         ReservaDTO reservaDTO = new ReservaDTO();
         UUID reservaId = UUID.randomUUID();
         UUID mesaId = UUID.randomUUID();
@@ -104,7 +103,6 @@ public class ReservaControllerTest {
         reserva.setQuantidadePessoas(reservaDTO.getQuantidadePessoas());
         reserva.setDataReserva(reservaDTO.getDataReserva());
 
-        // Configurando os mocks
         when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
         when(restauranteRepository.findById(restauranteId)).thenReturn(Optional.of(restaurante));
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
@@ -119,7 +117,6 @@ public class ReservaControllerTest {
 
         when(reservaService.createReserva(any(ReservaDTO.class))).thenReturn(reservaDTO);
 
-        // Executando a requisição e verificando a resposta
         mockMvc.perform(post("/reservas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":\"" + reservaId + "\",\"mesaId\":\"" + mesaId + "\",\"restauranteId\":\"" + restauranteId + "\",\"quantidadePessoas\":\"2\"}"))
