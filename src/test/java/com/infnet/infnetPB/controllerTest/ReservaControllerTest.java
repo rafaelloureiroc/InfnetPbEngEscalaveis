@@ -1,28 +1,42 @@
 package com.infnet.infnetPB.controllerTest;
 
 import com.infnet.infnetPB.DTO.ReservaDTO;
+import com.infnet.infnetPB.client.NotificationClient;
 import com.infnet.infnetPB.controller.ReservaController;
+import com.infnet.infnetPB.event.MesaReservadaEvent;
+import com.infnet.infnetPB.model.Mesa;
+import com.infnet.infnetPB.model.Reserva;
+import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.model.history.ReservaHistory;
+import com.infnet.infnetPB.repository.MesaRepository;
+import com.infnet.infnetPB.repository.ReservaRepository;
+import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.service.ReservaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +53,21 @@ public class ReservaControllerTest {
     @Mock
     private ReservaService reservaService;
 
+    @MockBean
+    private MesaRepository mesaRepository;
+
+    @MockBean
+    private RestauranteRepository restauranteRepository;
+
+    @MockBean
+    private ReservaRepository reservaRepository;
+
+    @MockBean
+    private RabbitTemplate rabbitTemplate;
+
+    @MockBean
+    private NotificationClient notificationClient;
+
     @InjectMocks
     private ReservaController reservaController;
 
@@ -50,20 +79,56 @@ public class ReservaControllerTest {
 
     @Test
     public void testCreateReserva() throws Exception {
+        // Preparando os dados de entrada
         ReservaDTO reservaDTO = new ReservaDTO();
         UUID reservaId = UUID.randomUUID();
+        UUID mesaId = UUID.randomUUID();
+        UUID restauranteId = UUID.randomUUID();
+
         reservaDTO.setId(reservaId);
+        reservaDTO.setMesaId(mesaId);
+        reservaDTO.setRestauranteId(restauranteId);
         reservaDTO.setQuantidadePessoas(2);
+        reservaDTO.setDataReserva(LocalDate.now());
+
+        Mesa mesa = new Mesa();
+        mesa.setId(mesaId);
+
+        Restaurante restaurante = new Restaurante();
+        restaurante.setId(restauranteId);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(reservaId);
+        reserva.setMesa(mesa);
+        reserva.setRestaurante(restaurante);
+        reserva.setQuantidadePessoas(reservaDTO.getQuantidadePessoas());
+        reserva.setDataReserva(reservaDTO.getDataReserva());
+
+        // Configurando os mocks
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
+        when(restauranteRepository.findById(restauranteId)).thenReturn(Optional.of(restaurante));
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+
+        doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(MesaReservadaEvent.class));
+
+        NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
+        notificationRequest.setTo("rafaelloureiro2002@gmail.com");
+        notificationRequest.setSubject("Nova Reserva Criada");
+        notificationRequest.setBody("Uma nova reserva foi criada.");
+        doNothing().when(notificationClient).sendNotification(any(NotificationClient.NotificationRequest.class));
 
         when(reservaService.createReserva(any(ReservaDTO.class))).thenReturn(reservaDTO);
 
+        // Executando a requisição e verificando a resposta
         mockMvc.perform(post("/reservas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"" + reservaId + "\",\"quantidadePessoas\":\"2\"}"))
+                        .content("{\"id\":\"" + reservaId + "\",\"mesaId\":\"" + mesaId + "\",\"restauranteId\":\"" + restauranteId + "\",\"quantidadePessoas\":\"2\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(reservaId.toString()))
                 .andExpect(jsonPath("$.quantidadePessoas").value(2));
     }
+
+
 
     @Test
     public void testGetAllReservas() throws Exception {
