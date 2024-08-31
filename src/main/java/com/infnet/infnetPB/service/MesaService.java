@@ -42,6 +42,7 @@ public class MesaService {
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
+    @Transactional
     public MesaDTO createMesa(MesaDTO mesaDTO) {
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(mesaDTO.getRestauranteId());
         Restaurante restaurante = restauranteOptional.orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
@@ -68,11 +69,12 @@ public class MesaService {
 
         if (success) {
             logger.info("Evento MesaCadastrada enviado com sucesso.");
+            return mapToDTO(savedMesa);
         } else {
             logger.error("Falha ao enviar evento MesaCadastrada após {} tentativas.", MAX_RETRIES);
+            mesaRepository.delete(savedMesa);
+            throw new RuntimeException("Falha ao enviar evento MesaCadastrada. Mesa não foi criada.");
         }
-
-        return mapToDTO(savedMesa);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {

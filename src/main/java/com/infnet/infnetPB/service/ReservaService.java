@@ -50,12 +50,13 @@ public class ReservaService {
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
+    @Transactional
     public ReservaDTO createReserva(ReservaDTO reservaDTO) {
         Optional<Mesa> mesaOptional = mesaRepository.findById(reservaDTO.getMesaId());
         Mesa mesa = mesaOptional.orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
 
         if (mesa.getReserva() != null) {
-            logger.error("A Mesa já está reservada");
+            throw new RuntimeException("A Mesa já está reservada");
         }
 
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(reservaDTO.getRestauranteId());
@@ -80,23 +81,28 @@ public class ReservaService {
 
         logger.info("Tentando enviar evento mesaReservada: {}", event);
 
-        boolean success = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
+        boolean eventSuccess = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
 
-        if (success) {
+        if (eventSuccess) {
             logger.info("Evento mesaReservada enviado com sucesso.");
+
+            NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
+            notificationRequest.setTo("rafaelloureiro2002@gmail.com");
+            notificationRequest.setSubject("Nova Reserva Criada");
+            notificationRequest.setBody("Uma nova reserva foi criada.");
+
+            try {
+                notificationClient.sendNotification(notificationRequest);
+                logger.info("Notificação enviada com sucesso.");
+            } catch (Exception e) {
+                logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
+            }
         } else {
             logger.error("Falha ao enviar evento mesaReservada após {} tentativas.", MAX_RETRIES);
-        }
-
-        NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
-        notificationRequest.setTo("rafaelloureiro2002@gmail.com");
-        notificationRequest.setSubject("Nova Reserva Criada");
-        notificationRequest.setBody("Uma nova reserva foi criada.");
-
-        try {
-            notificationClient.sendNotification(notificationRequest);
-        } catch (Exception e) {
-            logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
+            reservaRepository.delete(savedReserva);
+            mesa.setReserva(null);
+            mesaRepository.save(mesa);
+            throw new RuntimeException("Falha ao enviar evento mesaReservada. Reserva não foi criada.");
         }
 
         return mapToDTO(savedReserva);

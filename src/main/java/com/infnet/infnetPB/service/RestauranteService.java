@@ -75,12 +75,12 @@ public class RestauranteService {
 
         if (success) {
             logger.info("Evento restauranteCadastrado enviado com sucesso.");
+            return convertToDTO(savedRestaurante);
         } else {
             logger.error("Falha ao enviar evento restauranteCadastrado após {} tentativas.", MAX_RETRIES);
+            restauranteRepository.delete(savedRestaurante);
+            throw new RuntimeException("Falha ao enviar evento restauranteCadastrado. Restaurante não foi criado.");
         }
-
-
-        return convertToDTO(savedRestaurante);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {

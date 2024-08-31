@@ -47,6 +47,7 @@ public class PedidoService {
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
+    @Transactional
     public PedidoDTO createPedido(PedidoDTO pedidoDTO) {
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(pedidoDTO.getRestauranteId());
         Restaurante restaurante = restauranteOptional.orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
@@ -56,6 +57,7 @@ public class PedidoService {
 
         if (mesa.getPedido() != null) {
             logger.error("A Mesa já tem um pedido criado.");
+            throw new RuntimeException("A Mesa já tem um pedido criado.");
         }
 
         Pedido pedido = new Pedido();
@@ -65,7 +67,6 @@ public class PedidoService {
         pedido.setMesa(mesa);
 
         Pedido savedPedido = pedidoRepository.save(pedido);
-
         savePedidoHistory(savedPedido, "CREATE");
 
         PedidoCriadoEvent event = new PedidoCriadoEvent(
@@ -81,12 +82,13 @@ public class PedidoService {
         boolean success = sendEventWithRetry(event, "pedidoExchange", "pedidoCriado");
 
         if (success) {
-            logger.info("Evento pedidoCriado enviado com sucesso.");
+            logger.info("Evento PedidoCriado enviado com sucesso.");
+            return mapToDTO(savedPedido);
         } else {
-            logger.error("Falha ao enviar evento pedidoCriado após {} tentativas.", MAX_RETRIES);
+            logger.error("Falha ao enviar evento PedidoCriado após {} tentativas.", MAX_RETRIES);
+            pedidoRepository.delete(savedPedido);
+            throw new RuntimeException("Falha ao enviar evento PedidoCriado. Pedido não foi criado.");
         }
-
-        return mapToDTO(savedPedido);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {
