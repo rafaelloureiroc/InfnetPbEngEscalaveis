@@ -3,12 +3,15 @@ package com.infnet.infnetPB.service;
 import com.infnet.infnetPB.DTO.MesaDTO;
 import com.infnet.infnetPB.DTO.PedidoDTO;
 import com.infnet.infnetPB.event.MesaCadastradaEvent;
+import com.infnet.infnetPB.listener.RestauranteCadastradoListener;
 import com.infnet.infnetPB.model.history.MesaHistory;
 import com.infnet.infnetPB.model.Pedido;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.repository.historyRepository.MesaHistoryRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,10 @@ public class MesaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 2000;
+
     public MesaDTO createMesa(MesaDTO mesaDTO) {
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(mesaDTO.getRestauranteId());
         Restaurante restaurante = restauranteOptional.orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
@@ -55,14 +62,39 @@ public class MesaService {
                 "CREATED"
         );
 
-        try {
-            rabbitTemplate.convertAndSend("mesaExchange", "mesaCadastrada", event);
-        } catch (Exception e) {
-            System.err.println("(MesaCadastro) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+        logger.info("Tentando enviar evento MesaCadastrada: {}", event);
+
+        boolean success = sendEventWithRetry(event, "mesaExchange", "mesaCadastrada");
+
+        if (success) {
+            logger.info("Evento MesaCadastrada enviado com sucesso.");
+        } else {
+            logger.error("Falha ao enviar evento MesaCadastrada após {} tentativas.", MAX_RETRIES);
         }
 
         return mapToDTO(savedMesa);
     }
+
+    private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                rabbitTemplate.convertAndSend(exchange, routingKey, event);
+                return true;
+            } catch (Exception e) {
+                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
     public List<MesaDTO> getAllMesas() {
         List<Mesa> mesas = mesaRepository.findAll();
         return mesas.stream()

@@ -7,6 +7,7 @@ import CadastrarPedido from './components/CadastroPedidos';
 import CadastrarReserva from './components/CadastroReserva';
 import Login from './components/Login';
 import Register from './components/Register';
+import Notifications from './components/Notifications';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -192,6 +193,7 @@ function App() {
             {showCadastrarMesa && <CadastrarMesa />}
             {showCadastrarPedido && <CadastrarPedido />}
             {showCadastrarReserva && <CadastrarReserva />}
+            <Notifications />
         </div>
     );
 }

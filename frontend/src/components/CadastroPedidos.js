@@ -5,6 +5,7 @@ const CadastrarPedido = () => {
     const [valorTotal, setValorTotal] = useState('');
     const [restaurantes, setRestaurantes] = useState([]);
     const [mesas, setMesas] = useState([]);
+    const [mesasFiltradas, setMesasFiltradas] = useState([]);
     const [restauranteId, setRestauranteId] = useState('');
     const [mesaId, setMesaId] = useState('');
     const [infoAdicionalMesa, setInfoAdicionalMesa] = useState('');
@@ -43,11 +44,22 @@ const CadastrarPedido = () => {
         fetchMesas();
     }, []);
 
+    const handleRestauranteChange = (event) => {
+        const selectedRestauranteId = event.target.value;
+        setRestauranteId(selectedRestauranteId);
+
+        const mesasFiltradas = mesas.filter(mesa => mesa.restauranteId === selectedRestauranteId);
+        setMesasFiltradas(mesasFiltradas);
+
+        setMesaId('');
+        setInfoAdicionalMesa('');
+    };
+
     const handleMesaChange = (event) => {
         const selectedMesaId = event.target.value;
         setMesaId(selectedMesaId);
 
-        const selectedMesa = mesas.find(mesa => mesa.id === selectedMesaId);
+        const selectedMesa = mesasFiltradas.find(mesa => mesa.id === selectedMesaId);
         if (selectedMesa) {
             setInfoAdicionalMesa(selectedMesa.infoAdicional);
         } else {
@@ -116,7 +128,7 @@ const CadastrarPedido = () => {
                     <select
                         id="restauranteId"
                         value={restauranteId}
-                        onChange={(e) => setRestauranteId(e.target.value)}
+                        onChange={handleRestauranteChange}
                         required
                     >
                         <option value="">Selecione um restaurante</option>
@@ -136,7 +148,7 @@ const CadastrarPedido = () => {
                         required
                     >
                         <option value="">Selecione uma mesa</option>
-                        {mesas.map((mesa) => (
+                        {mesasFiltradas.map((mesa) => (
                             <option key={mesa.id} value={mesa.id}>
                                 {mesa.infoAdicional}
                             </option>

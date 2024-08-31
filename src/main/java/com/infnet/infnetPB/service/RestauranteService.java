@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 @Service
 public class RestauranteService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RestauranteService.class);
-
     @Autowired
     private RestauranteRepository restauranteRepository;
 
@@ -37,6 +35,10 @@ public class RestauranteService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 2000;
 
     @Transactional
     public RestauranteDTO createRestaurante(RestauranteDTO restauranteDTO) {
@@ -66,13 +68,38 @@ public class RestauranteService {
                 savedRestaurante.getCidade(),
                 savedRestaurante.getUf()
         );
-        try{
-            rabbitTemplate.convertAndSend("restauranteExchange", "restauranteCadastrado", event);
-        } catch (Exception e){
-            System.err.println("(Restaurante) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+
+        logger.info("Tentando enviar evento restauranteCadastrado: {}", event);
+
+        boolean success = sendEventWithRetry(event, "restauranteExchange", "restauranteCadastrado");
+
+        if (success) {
+            logger.info("Evento restauranteCadastrado enviado com sucesso.");
+        } else {
+            logger.error("Falha ao enviar evento restauranteCadastrado após {} tentativas.", MAX_RETRIES);
         }
 
+
         return convertToDTO(savedRestaurante);
+    }
+
+    private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                rabbitTemplate.convertAndSend(exchange, routingKey, event);
+                return true;
+            } catch (Exception e) {
+                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Transactional

@@ -11,6 +11,8 @@ import com.infnet.infnetPB.repository.MesaRepository;
 import com.infnet.infnetPB.repository.ReservaRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.repository.historyRepository.ReservaHistoryRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,12 +46,16 @@ public class ReservaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 2000;
+
     public ReservaDTO createReserva(ReservaDTO reservaDTO) {
         Optional<Mesa> mesaOptional = mesaRepository.findById(reservaDTO.getMesaId());
         Mesa mesa = mesaOptional.orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
 
         if (mesa.getReserva() != null) {
-            throw new RuntimeException("A Mesa já está reservada");
+            logger.error("A Mesa já está reservada");
         }
 
         Optional<Restaurante> restauranteOptional = restauranteRepository.findById(reservaDTO.getRestauranteId());
@@ -71,11 +77,17 @@ public class ReservaService {
                 mesa.getId(),
                 restaurante.getId(),
                 reserva.getDataReserva());
-        try {
-            rabbitTemplate.convertAndSend("mesaExchange", "mesaReservada", event);
-        } catch (Exception e){
-            System.err.println("(MesaReserva) Falha ao comunicar com RabbitMQ: " + e.getMessage());
+
+        logger.info("Tentando enviar evento mesaReservada: {}", event);
+
+        boolean success = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
+
+        if (success) {
+            logger.info("Evento mesaReservada enviado com sucesso.");
+        } else {
+            logger.error("Falha ao enviar evento mesaReservada após {} tentativas.", MAX_RETRIES);
         }
+
         NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
         notificationRequest.setTo("rafaelloureiro2002@gmail.com");
         notificationRequest.setSubject("Nova Reserva Criada");
@@ -84,10 +96,29 @@ public class ReservaService {
         try {
             notificationClient.sendNotification(notificationRequest);
         } catch (Exception e) {
-            System.err.println("Falha ao comunicar com serviço de notificação: " + e.getMessage());
+            logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
         }
 
         return mapToDTO(savedReserva);
+    }
+
+    private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                rabbitTemplate.convertAndSend(exchange, routingKey, event);
+                return true;
+            } catch (Exception e) {
+                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                if (attempt < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public List<ReservaDTO> getAllReservas() {

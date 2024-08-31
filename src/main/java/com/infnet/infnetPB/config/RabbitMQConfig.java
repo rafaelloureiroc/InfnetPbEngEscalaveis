@@ -1,5 +1,6 @@
 package com.infnet.infnetPB.config;
 
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,6 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 @Configuration
 public class RabbitMQConfig {
 
-
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
@@ -27,6 +27,14 @@ public class RabbitMQConfig {
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(jackson2JsonMessageConverter());
+        return factory;
     }
 
     @Bean
@@ -54,6 +62,7 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(mesaCadastradaQueue).to(mesaExchange).with("mesaCadastrada").noargs();
     }
 
+
     @Bean
     public Exchange pedidoExchange() {
         return ExchangeBuilder.directExchange("pedidoExchange").durable(true).build();
@@ -68,6 +77,7 @@ public class RabbitMQConfig {
     public Binding pedidoCriadoBinding(Queue pedidoCriadoQueue, Exchange pedidoExchange) {
         return BindingBuilder.bind(pedidoCriadoQueue).to(pedidoExchange).with("pedidoCriado").noargs();
     }
+
 
     @Bean
     public Exchange restauranteExchange() {
