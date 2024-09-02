@@ -19,10 +19,10 @@
 4. Configuração do Ambiente
 
 - Docker Compose:
-- Configura e orquestra os containers de todos os micro serviços e do RabbitMQ.
+  Configura e orquestra os containers de todos os micro serviços e do RabbitMQ.
 
 - Docker:
-- Todos os serviços estão configurados para usar a mesma rede Docker, permitindo que se comuniquem entre si usando seus nomes de serviço.
+  Todos os serviços estão configurados para usar a mesma rede Docker, permitindo que se comuniquem entre si usando seus nomes de serviço.
 
 5. Design Orientado a Eventos
 
