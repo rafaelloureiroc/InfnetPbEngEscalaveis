@@ -120,30 +120,25 @@
 			<artifactId>spring-rabbit</artifactId>
 		</dependency>
 
-		<!-- Dependência para WebSocket -->
+		<!-- WebSocket -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
-		<!-- Dependência para STOMP over WebSocket -->
+		<!-- STOMP over WebSocket -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
-		<!-- Dependência para trabalhar com JSON -->
+		<!-- Convert to JSON -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
 
-		<!-- Dependências de Teste -->
-		<dependency>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-test</artifactId>
-		<scope>test</scope>
-		</dependency>
+
 
 	</dependencies>
 
