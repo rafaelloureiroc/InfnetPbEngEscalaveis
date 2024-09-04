@@ -24,7 +24,6 @@ public class RestauranteHistory {
     private Restaurante restaurante;
 
     private String nome;
-    private String localizacao;
     private LocalDateTime timestamp;
     private String cep;
     private String logradouro;

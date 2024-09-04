@@ -3,14 +3,13 @@ package com.infnet.infnetPB.service;
 import com.infnet.infnetPB.DTO.MesaDTO;
 import com.infnet.infnetPB.DTO.PedidoDTO;
 import com.infnet.infnetPB.event.MesaCadastradaEvent;
-import com.infnet.infnetPB.listener.RestauranteCadastradoListener;
 import com.infnet.infnetPB.model.history.MesaHistory;
 import com.infnet.infnetPB.model.Pedido;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.repository.historyRepository.MesaHistoryRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +37,7 @@ public class MesaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private final static Logger logger = Logger.getLogger(MesaService.class);
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
@@ -63,7 +62,7 @@ public class MesaService {
                 "CREATED"
         );
 
-        logger.info("Tentando enviar evento MesaCadastrada: {}", event);
+        logger.info("Tentando enviar evento MesaCadastrada: " + event);
 
         boolean success = sendEventWithRetry(event, "mesaExchange", "mesaCadastrada");
 
@@ -71,7 +70,7 @@ public class MesaService {
             logger.info("Evento MesaCadastrada enviado com sucesso.");
             return mapToDTO(savedMesa);
         } else {
-            logger.error("Falha ao enviar evento MesaCadastrada após {} tentativas.", MAX_RETRIES);
+            logger.error("Falha ao enviar evento MesaCadastrada após " + MAX_RETRIES + " tentativas.");
             mesaRepository.delete(savedMesa);
             throw new RuntimeException("Falha ao enviar evento MesaCadastrada. Mesa não foi criada.");
         }
@@ -83,7 +82,7 @@ public class MesaService {
                 rabbitTemplate.convertAndSend(exchange, routingKey, event);
                 return true;
             } catch (Exception e) {
-                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                logger.error("Erro ao enviar evento (tentativa " + attempt + "): " + e.getMessage());
                 if (attempt < MAX_RETRIES) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);

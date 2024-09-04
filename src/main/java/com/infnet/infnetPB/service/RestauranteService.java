@@ -1,12 +1,14 @@
 package com.infnet.infnetPB.service;
 
 import com.infnet.infnetPB.DTO.RestauranteDTO;
+import com.infnet.infnetPB.InfnetPbApplication;
 import com.infnet.infnetPB.event.RestauranteCadastradoEvent;
 import com.infnet.infnetPB.model.Cep;
 import com.infnet.infnetPB.model.Restaurante;
 import com.infnet.infnetPB.model.history.RestauranteHistory;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.repository.historyRepository.RestauranteHistoryRepository;
+import org.apache.log4j.Logger;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.log4j.Logger;
 
 @Service
 public class RestauranteService {
@@ -36,7 +38,7 @@ public class RestauranteService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private final static Logger logger = Logger.getLogger(RestauranteService.class);
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
@@ -54,7 +56,7 @@ public class RestauranteService {
             restaurante.setCidade(cep.getLocalidade());
             restaurante.setUf(cep.getUf());
         } else {
-            logger.warn("CEP não encontrado ou inválido: {}", restauranteDTO.getCep());
+            logger.warn("CEP não encontrado ou inválido: " + restauranteDTO.getCep());
         }
 
         Restaurante savedRestaurante = restauranteRepository.save(restaurante);
@@ -69,7 +71,7 @@ public class RestauranteService {
                 savedRestaurante.getUf()
         );
 
-        logger.info("Tentando enviar evento restauranteCadastrado: {}", event);
+        logger.info("Tentando enviar evento restauranteCadastrado:" + event);
 
         boolean success = sendEventWithRetry(event, "restauranteExchange", "restauranteCadastrado");
 
@@ -77,7 +79,7 @@ public class RestauranteService {
             logger.info("Evento restauranteCadastrado enviado com sucesso.");
             return convertToDTO(savedRestaurante);
         } else {
-            logger.error("Falha ao enviar evento restauranteCadastrado após {} tentativas.", MAX_RETRIES);
+            logger.error("Falha ao enviar evento restauranteCadastrado após " + MAX_RETRIES + " tentativas.");
             restauranteRepository.delete(savedRestaurante);
             throw new RuntimeException("Falha ao enviar evento restauranteCadastrado. Restaurante não foi criado.");
         }
@@ -89,7 +91,7 @@ public class RestauranteService {
                 rabbitTemplate.convertAndSend(exchange, routingKey, event);
                 return true;
             } catch (Exception e) {
-                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                logger.error("Erro ao enviar evento (tentativa " + attempt + "): " + e.getMessage());
                 if (attempt < MAX_RETRIES) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);
@@ -123,6 +125,7 @@ public class RestauranteService {
         RestauranteHistory history = new RestauranteHistory();
         history.setRestaurante(restaurante);
         history.setNome(restaurante.getNome());
+        history.setCep(restaurante.getCep());
         history.setLogradouro(restaurante.getLogradouro());
         history.setBairro(restaurante.getBairro());
         history.setCidade(restaurante.getCidade());

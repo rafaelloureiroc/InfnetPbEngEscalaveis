@@ -10,7 +10,7 @@ import com.infnet.infnetPB.repository.MesaRepository;
 import com.infnet.infnetPB.repository.historyRepository.PedidoHistoryRepository;
 import com.infnet.infnetPB.repository.PedidoRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class PedidoService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private final static Logger logger = Logger.getLogger(RestauranteService.class);
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
@@ -77,7 +77,7 @@ public class PedidoService {
                 savedPedido.getRestaurante().getId()
         );
 
-        logger.info("Tentando enviar evento PedidoCriado: {}", event);
+        logger.info("Tentando enviar evento PedidoCriado:" + event);
 
         boolean success = sendEventWithRetry(event, "pedidoExchange", "pedidoCriado");
 
@@ -85,7 +85,7 @@ public class PedidoService {
             logger.info("Evento PedidoCriado enviado com sucesso.");
             return mapToDTO(savedPedido);
         } else {
-            logger.error("Falha ao enviar evento PedidoCriado após {} tentativas.", MAX_RETRIES);
+            logger.error("Falha ao enviar evento PedidoCriado após " + MAX_RETRIES + " tentativas.");
             pedidoRepository.delete(savedPedido);
             throw new RuntimeException("Falha ao enviar evento PedidoCriado. Pedido não foi criado.");
         }
@@ -97,7 +97,7 @@ public class PedidoService {
                 rabbitTemplate.convertAndSend(exchange, routingKey, event);
                 return true;
             } catch (Exception e) {
-                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                logger.error("Erro ao enviar evento (tentativa " + attempt + "): " + e.getMessage());
                 if (attempt < MAX_RETRIES) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);

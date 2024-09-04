@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 const CadastroRestaurante = () => {
     const [nome, setNome] = useState('');
-    const [localizacao, setLocalizacao] = useState('');
     const [cep, setcep] = useState('');
     const [message, setMessage] = useState('');
 
@@ -11,7 +10,6 @@ const CadastroRestaurante = () => {
 
         const restauranteData = {
             nome: nome,
-            localizacao: localizacao,
             cep : cep
         };
 

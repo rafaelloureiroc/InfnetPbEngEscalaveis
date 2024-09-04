@@ -11,7 +11,7 @@ import com.infnet.infnetPB.repository.MesaRepository;
 import com.infnet.infnetPB.repository.ReservaRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import com.infnet.infnetPB.repository.historyRepository.ReservaHistoryRepository;
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +46,7 @@ public class ReservaService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    private static final Logger logger = LoggerFactory.getLogger(MesaService.class);
+    private final static Logger logger = Logger.getLogger(RestauranteService.class);
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY_MS = 2000;
 
@@ -79,7 +79,7 @@ public class ReservaService {
                 restaurante.getId(),
                 reserva.getDataReserva());
 
-        logger.info("Tentando enviar evento mesaReservada: {}", event);
+        logger.info("Tentando enviar evento mesaReservada: " + event);
 
         boolean eventSuccess = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
 
@@ -98,7 +98,7 @@ public class ReservaService {
                 logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
             }
         } else {
-            logger.error("Falha ao enviar evento mesaReservada após {} tentativas.", MAX_RETRIES);
+            logger.error("Falha ao enviar evento mesaReservada após " + MAX_RETRIES + " tentativas.");
             reservaRepository.delete(savedReserva);
             mesa.setReserva(null);
             mesaRepository.save(mesa);
@@ -114,7 +114,7 @@ public class ReservaService {
                 rabbitTemplate.convertAndSend(exchange, routingKey, event);
                 return true;
             } catch (Exception e) {
-                logger.error("Erro ao enviar evento (tentativa {}): {}", attempt, e.getMessage());
+                logger.error("Erro ao enviar evento (tentativa " + attempt + "): " + e.getMessage());
                 if (attempt < MAX_RETRIES) {
                     try {
                         Thread.sleep(RETRY_DELAY_MS);
