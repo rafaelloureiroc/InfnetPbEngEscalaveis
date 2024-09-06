@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,16 +65,16 @@ public class MesaService {
 
         logger.info("Tentando enviar evento MesaCadastrada: " + event);
 
-        boolean success = sendEventWithRetry(event, "mesaExchange", "mesaCadastrada");
+        CompletableFuture.runAsync(() -> {
+            boolean success = sendEventWithRetry(event, "mesaExchange", "mesaCadastrada");
+            if (success) {
+                logger.info("Evento MesaCadastrada enviado com sucesso.");
+            } else {
+                logger.error("Falha ao enviar evento MesaCadastrada após " + MAX_RETRIES + " tentativas.");
+            }
+        });
 
-        if (success) {
-            logger.info("Evento MesaCadastrada enviado com sucesso.");
-            return mapToDTO(savedMesa);
-        } else {
-            logger.error("Falha ao enviar evento MesaCadastrada após " + MAX_RETRIES + " tentativas.");
-            mesaRepository.delete(savedMesa);
-            throw new RuntimeException("Falha ao enviar evento MesaCadastrada. Mesa não foi criada.");
-        }
+        return mapToDTO(savedMesa);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {

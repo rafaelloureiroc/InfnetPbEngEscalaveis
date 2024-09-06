@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 @Service
 @Transactional
@@ -79,31 +80,28 @@ public class ReservaService {
                 restaurante.getId(),
                 reserva.getDataReserva());
 
-        logger.info("Tentando enviar evento mesaReservada: " + event);
+        NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
+        notificationRequest.setTo("rafaelloureiro2002@gmail.com");
+        notificationRequest.setSubject("Nova Reserva Criada");
+        notificationRequest.setBody("Uma nova reserva foi criada.");
 
-        boolean eventSuccess = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
-
-        if (eventSuccess) {
-            logger.info("Evento mesaReservada enviado com sucesso.");
-
-            NotificationClient.NotificationRequest notificationRequest = new NotificationClient.NotificationRequest();
-            notificationRequest.setTo("rafaelloureiro2002@gmail.com");
-            notificationRequest.setSubject("Nova Reserva Criada");
-            notificationRequest.setBody("Uma nova reserva foi criada.");
-
-            try {
-                notificationClient.sendNotification(notificationRequest);
-                logger.info("Notificação enviada com sucesso.");
-            } catch (Exception e) {
-                logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
-            }
-        } else {
-            logger.error("Falha ao enviar evento mesaReservada após " + MAX_RETRIES + " tentativas.");
-            reservaRepository.delete(savedReserva);
-            mesa.setReserva(null);
-            mesaRepository.save(mesa);
-            throw new RuntimeException("Falha ao enviar evento mesaReservada. Reserva não foi criada.");
+        try {
+            notificationClient.sendNotification(notificationRequest);
+            logger.info("Notificação enviada com sucesso.");
+        } catch (Exception e) {
+            logger.error("Falha ao comunicar com serviço de notificação: " + e.getMessage());
         }
+
+        logger.info("Tentando enviar evento MesaReservada: " + event);
+
+        CompletableFuture.runAsync(() -> {
+            boolean success = sendEventWithRetry(event, "mesaExchange", "mesaReservada");
+            if (success) {
+                logger.info("Evento MesaReservada enviado com sucesso.");
+            } else {
+                logger.error("Falha ao enviar evento MesaReservada após " + MAX_RETRIES + " tentativas.");
+            }
+        });
 
         return mapToDTO(savedReserva);
     }

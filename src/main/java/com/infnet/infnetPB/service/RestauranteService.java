@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -61,6 +62,7 @@ public class RestauranteService {
 
         Restaurante savedRestaurante = restauranteRepository.save(restaurante);
         saveRestauranteHistory(savedRestaurante, "CREATE");
+
         RestauranteCadastradoEvent event = new RestauranteCadastradoEvent(
                 savedRestaurante.getId(),
                 savedRestaurante.getNome(),
@@ -71,18 +73,18 @@ public class RestauranteService {
                 savedRestaurante.getUf()
         );
 
-        logger.info("Tentando enviar evento restauranteCadastrado:" + event);
+        logger.info("Tentando enviar evento restauranteCadastrado: " + event);
 
-        boolean success = sendEventWithRetry(event, "restauranteExchange", "restauranteCadastrado");
+        CompletableFuture.runAsync(() -> {
+            boolean success = sendEventWithRetry(event, "restauranteExchange", "restauranteCadastrado");
+            if (success) {
+                logger.info("Evento restauranteCadastrado enviado com sucesso.");
+            } else {
+                logger.error("Falha ao enviar evento restauranteCadastrado após " + MAX_RETRIES + " tentativas.");
+            }
+        });
 
-        if (success) {
-            logger.info("Evento restauranteCadastrado enviado com sucesso.");
-            return convertToDTO(savedRestaurante);
-        } else {
-            logger.error("Falha ao enviar evento restauranteCadastrado após " + MAX_RETRIES + " tentativas.");
-            restauranteRepository.delete(savedRestaurante);
-            throw new RuntimeException("Falha ao enviar evento restauranteCadastrado. Restaurante não foi criado.");
-        }
+        return convertToDTO(savedRestaurante);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {

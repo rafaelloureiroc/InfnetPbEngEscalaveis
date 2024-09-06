@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,18 +78,18 @@ public class PedidoService {
                 savedPedido.getRestaurante().getId()
         );
 
-        logger.info("Tentando enviar evento PedidoCriado:" + event);
+        logger.info("Tentando enviar evento PedidoCriado: " + event);
 
-        boolean success = sendEventWithRetry(event, "pedidoExchange", "pedidoCriado");
+        CompletableFuture.runAsync(() -> {
+            boolean success = sendEventWithRetry(event, "pedidoExchange", "pedidoCriado");
+            if (success) {
+                logger.info("Evento PedidoCriado enviado com sucesso.");
+            } else {
+                logger.error("Falha ao enviar evento PedidoCriado após " + MAX_RETRIES + " tentativas.");
+            }
+        });
 
-        if (success) {
-            logger.info("Evento PedidoCriado enviado com sucesso.");
-            return mapToDTO(savedPedido);
-        } else {
-            logger.error("Falha ao enviar evento PedidoCriado após " + MAX_RETRIES + " tentativas.");
-            pedidoRepository.delete(savedPedido);
-            throw new RuntimeException("Falha ao enviar evento PedidoCriado. Pedido não foi criado.");
-        }
+        return mapToDTO(savedPedido);
     }
 
     private boolean sendEventWithRetry(Object event, String exchange, String routingKey) {
