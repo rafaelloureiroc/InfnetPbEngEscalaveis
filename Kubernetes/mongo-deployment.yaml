@@ -21,7 +21,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongo  # Nome do serviço alterado para 'mongo'
+  name: mongo
 spec:
   selector:
     app: mongo
