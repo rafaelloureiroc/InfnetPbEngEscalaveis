@@ -70,16 +70,8 @@ jobs:
           kubectl get services
 
       - name: Wait for Service to be Available
-        run: sleep 60
+        run: sleep 30
         
-      - name: Wait for Pods to be Ready
-        run: |
-          kubectl rollout status deployment/infnetpb-deployment
-          kubectl get pods
-
-      - name: Wait for Service to be Available
-        run: sleep 60
-
       - name: Get Service URL
         run: |
           minikube service infnetpb-service --url
