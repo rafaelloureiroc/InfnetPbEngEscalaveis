@@ -8,7 +8,6 @@ const CadastrarPedido = () => {
     const [mesasFiltradas, setMesasFiltradas] = useState([]);
     const [restauranteId, setRestauranteId] = useState('');
     const [mesaId, setMesaId] = useState('');
-    const [infoAdicionalMesa, setInfoAdicionalMesa] = useState('');
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -52,19 +51,11 @@ const CadastrarPedido = () => {
         setMesasFiltradas(mesasFiltradas);
 
         setMesaId('');
-        setInfoAdicionalMesa('');
     };
 
     const handleMesaChange = (event) => {
         const selectedMesaId = event.target.value;
         setMesaId(selectedMesaId);
-
-        const selectedMesa = mesasFiltradas.find(mesa => mesa.id === selectedMesaId);
-        if (selectedMesa) {
-            setInfoAdicionalMesa(selectedMesa.infoAdicional);
-        } else {
-            setInfoAdicionalMesa('');
-        }
     };
 
     const handleSubmit = async (event) => {
