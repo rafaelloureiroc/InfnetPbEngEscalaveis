@@ -74,6 +74,9 @@ jobs:
           kubectl rollout status deployment/infnetpb-deployment
           kubectl get pods
 
+      - name: Wait for Service to be Available
+        run: sleep 60
+
       - name: Get Service URL
         run: |
           minikube service infnetpb-service --url
