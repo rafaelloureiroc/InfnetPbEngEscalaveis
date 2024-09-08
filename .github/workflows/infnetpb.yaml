@@ -69,6 +69,9 @@ jobs:
           kubectl get deployments
           kubectl get services
 
+      - name: Wait for Service to be Available
+        run: sleep 60
+        
       - name: Wait for Pods to be Ready
         run: |
           kubectl rollout status deployment/infnetpb-deployment
