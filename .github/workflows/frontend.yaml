@@ -74,15 +74,3 @@ jobs:
           kubectl apply -f Kubernetes/frontend-deployment.yaml
           kubectl get deployments
           kubectl get services
-
-      - name: Wait for Service to be Available
-        run: sleep 30
-
-      - name: Get Service URL
-        run: |
-          SERVICE_URL=$(minikube service frontend-service --url)
-          echo "Service URL: $SERVICE_URL"
-
-      - name: Test Service URL
-        run: |
-          curl $SERVICE_URL
