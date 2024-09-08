@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: infnetpb
-          image: rafaelloureioc/infnetpb:43.0
+          image: rafaelloureioc/infnetpb:latest
           ports:
             - containerPort: 8080
 ---
