@@ -25,6 +25,10 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Run ESLint with Warnings Only
+        working-directory: ./frontend
+        run: npx eslint . --rule "no-unused-vars:warn"
+
       - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
