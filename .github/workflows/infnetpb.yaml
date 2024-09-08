@@ -69,4 +69,4 @@ jobs:
 
       - name: Get Service Information
         run: |
-          kubectl get svc infnetpb-service
+          minikube service infnetpb-service
