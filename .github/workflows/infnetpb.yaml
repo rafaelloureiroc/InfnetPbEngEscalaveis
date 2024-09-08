@@ -30,6 +30,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
+      - name: Grant execute permission for Maven Wrapper
+        run: chmod +x ./mvnw
+
       - name: Build with Maven
         run: ./mvnw clean package -DskipTests
 
@@ -42,26 +45,29 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v1
         with:
           version: 'latest'
 
+      - name: Set up Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          minikube start --driver=docker
+
+      - name: Set kubectl context
+        run: |
+          kubectl config use-context minikube
+
       - name: Deploy to Kubernetes
         run: kubectl apply -f Kubernetes/infnetpb-deployment.yaml
 
-      - name: Verify Pods
+      - name: Get Service Information
         run: |
-          kubectl get pods
-          kubectl describe pods
-
-      - name: Verify Services
-        run: |
-          kubectl get svc
-          kubectl describe svc infnetpb-service
-          minikube service infnetpb-service
+          minikube service infnetpb-service --url
 
       - name: Port Forward Service
         run: kubectl port-forward svc/infnetpb-service 8080:8080 &
