@@ -71,7 +71,8 @@ jobs:
 
       - name: Wait for Service to be Available
         run: sleep 30
-        
+
       - name: Get Service URL
         run: |
           minikube service infnetpb-service --url
+          kubectl port-forward svc/infnetpb-service 8080:8080
