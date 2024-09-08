@@ -88,4 +88,4 @@ jobs:
            sleep 5
       - name: Test Service(GET)
         run: |
-          curl http://localhost:8080/mesas
+          curl http://localhost:8080/restaurantes
