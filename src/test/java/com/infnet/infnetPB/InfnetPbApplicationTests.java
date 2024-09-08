@@ -17,6 +17,9 @@ class InfnetPbApplicationTests {
 		mesaControllerTest.testCreateMesa();
 		mesaControllerTest.testGetAllMesas();
 		mesaControllerTest.testGetAllMesaHistories();
+		mesaControllerTest.testDeleteMesa();
+		mesaControllerTest.testUpdateMesa();
+		mesaControllerTest.testGetMesaById();
 	}
 	@Test
 	void testPedidoController() throws Exception {
@@ -26,6 +29,7 @@ class InfnetPbApplicationTests {
 		pedidoControllerTest.testGetAllPedidos();
 		pedidoControllerTest.testGetAllPedidoHistory();
 		pedidoControllerTest.testDeletePedidoById();
+		pedidoControllerTest.testUpdatePedido();
 	}
 
 	@Test
@@ -36,6 +40,7 @@ class InfnetPbApplicationTests {
 		reservaControllerTest.testGetAllReservas();
 		reservaControllerTest.testGetAllReservaHistories();
 		reservaControllerTest.testDeleteReservaById();
+		reservaControllerTest.testUpdateReserva();
 	}
 
 	@Test
@@ -46,5 +51,6 @@ class InfnetPbApplicationTests {
 		restauranteControllerTest.testGetAllRestaurantes();
 		restauranteControllerTest.testGetAllRestauranteHistories();
 		restauranteControllerTest.testDeleteRestauranteById();
+		restauranteControllerTest.testUpdateRestaurante();
 	}
 }

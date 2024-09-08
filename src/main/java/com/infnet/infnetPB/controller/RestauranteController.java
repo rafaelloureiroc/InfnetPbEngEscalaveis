@@ -37,6 +37,12 @@ public class RestauranteController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<RestauranteDTO> updateRestaurante(@PathVariable UUID id, @RequestBody RestauranteDTO restauranteDTO) {
+        RestauranteDTO updatedRestaurante = restauranteService.updateRestaurante(id, restauranteDTO);
+        return new ResponseEntity<>(updatedRestaurante, HttpStatus.OK);
+    }
+
     @GetMapping("/historico")
     public ResponseEntity<List<RestauranteHistory>> getAllRestauranteHistories() {
         List<RestauranteHistory> history = restauranteService.getAllRestauranteHistories();

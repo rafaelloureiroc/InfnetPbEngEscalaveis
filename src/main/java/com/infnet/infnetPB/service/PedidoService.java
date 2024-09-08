@@ -111,15 +111,33 @@ public class PedidoService {
         return false;
     }
 
+    public PedidoDTO updatePedido(UUID id, PedidoDTO pedidoDTO) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        pedido.setDescricaoPedido(pedidoDTO.getDescricaoPedido());
+        pedido.setValorTotal(pedidoDTO.getValorTotal());
+
+        Pedido updatedPedido = pedidoRepository.save(pedido);
+
+        savePedidoHistory(updatedPedido, "UPDATE");
+
+        return mapToDTO(updatedPedido);
+    }
+
+    public void deletePedidoById(UUID id) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        pedidoRepository.deleteById(id);
+        savePedidoHistory(pedido, "DELETE");
+    }
+
     public List<PedidoDTO> getAllPedidos() {
         List<Pedido> pedidos = pedidoRepository.findAll();
         return pedidos.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
-    }
-
-    public void deletePedidoById(UUID id) {
-        pedidoRepository.deleteById(id);
     }
 
     public List<PedidoHistory> getAllPedidoHistories() {

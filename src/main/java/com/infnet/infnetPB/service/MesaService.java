@@ -3,6 +3,7 @@ package com.infnet.infnetPB.service;
 import com.infnet.infnetPB.DTO.MesaDTO;
 import com.infnet.infnetPB.DTO.PedidoDTO;
 import com.infnet.infnetPB.event.MesaCadastradaEvent;
+import com.infnet.infnetPB.model.Reserva;
 import com.infnet.infnetPB.model.history.MesaHistory;
 import com.infnet.infnetPB.model.Pedido;
 import com.infnet.infnetPB.model.Restaurante;
@@ -10,7 +11,6 @@ import com.infnet.infnetPB.repository.historyRepository.MesaHistoryRepository;
 import com.infnet.infnetPB.repository.RestauranteRepository;
 import jakarta.transaction.Transactional;
 import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -110,9 +110,23 @@ public class MesaService {
         return mapToDTOWithPedidos(mesa);
     }
 
+    public MesaDTO updateMesa(UUID id, MesaDTO mesaDTO) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
+
+        mesa.setQtdAssentosMax(mesaDTO.getQtdAssentosMax());
+        mesa.setInfoAdicional(mesaDTO.getInfoAdicional());
+
+        Mesa updatedMesa = mesaRepository.save(mesa);
+        saveMesaHistory(updatedMesa, "UPDATE");
+
+        return mapToDTO(updatedMesa);
+    }
+
     public void deleteMesaById(UUID id) {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mesa não encontrada"));
+
         mesaRepository.deleteById(id);
         saveMesaHistory(mesa, "DELETE");
     }

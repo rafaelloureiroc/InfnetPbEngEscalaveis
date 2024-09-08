@@ -116,8 +116,38 @@ public class RestauranteService {
 
     @Transactional
     public void deleteRestauranteById(UUID id) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+
         restauranteRepository.deleteById(id);
+        saveRestauranteHistory(restaurante, "DELETE");
     }
+
+    @Transactional
+    public RestauranteDTO updateRestaurante(UUID id, RestauranteDTO restauranteDTO) {
+        Restaurante restaurante = restauranteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+
+        restaurante.setNome(restauranteDTO.getNome());
+        restaurante.setCep(restauranteDTO.getCep());
+
+        Optional<Cep> cepDetails = cepService.getCepDetails(restauranteDTO.getCep());
+        if (cepDetails.isPresent()) {
+            Cep cep = cepDetails.get();
+            restaurante.setLogradouro(cep.getLogradouro());
+            restaurante.setBairro(cep.getBairro());
+            restaurante.setCidade(cep.getLocalidade());
+            restaurante.setUf(cep.getUf());
+        } else {
+            logger.warn("CEP não encontrado ou inválido: " + restauranteDTO.getCep());
+        }
+
+        Restaurante updatedRestaurante = restauranteRepository.save(restaurante);
+        saveRestauranteHistory(updatedRestaurante, "UPDATE");
+
+        return convertToDTO(updatedRestaurante);
+    }
+
 
     public List<RestauranteHistory> getAllRestauranteHistories() {
         return restauranteHistoryRepository.findAll();

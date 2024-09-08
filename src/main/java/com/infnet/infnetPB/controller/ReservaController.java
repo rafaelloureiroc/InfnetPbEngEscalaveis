@@ -38,6 +38,12 @@ public class ReservaController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ReservaDTO> updateReserva(@PathVariable UUID id, @RequestBody ReservaDTO reservaDTO) {
+        ReservaDTO updatedReserva = reservaService.updateReserva(id, reservaDTO);
+        return new ResponseEntity<>(updatedReserva, HttpStatus.OK);
+    }
+
     @GetMapping("/historico")
     public ResponseEntity<List<ReservaHistory>> getAllReservaHistories() {
         List<ReservaHistory> history = reservaService.getAllReservaHistories();

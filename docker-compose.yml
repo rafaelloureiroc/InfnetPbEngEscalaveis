@@ -11,7 +11,7 @@ services:
       - my-network
 
   infnetpb:
-    image: rafaelloureioc/infnetpb:28.0
+    image: rafaelloureioc/infnetpb:42.0
     container_name: infnetpb
     ports:
       - "8080:8080"

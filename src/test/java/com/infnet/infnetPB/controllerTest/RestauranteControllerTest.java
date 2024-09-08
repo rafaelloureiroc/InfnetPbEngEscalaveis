@@ -23,9 +23,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -146,5 +144,32 @@ public class RestauranteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(historyId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(historyId2.toString()));
+    }
+    @Test
+    public void testUpdateRestaurante() throws Exception {
+        UUID restauranteId = UUID.randomUUID();
+
+        RestauranteDTO restauranteDTO = new RestauranteDTO();
+        restauranteDTO.setId(restauranteId);
+        restauranteDTO.setNome("Restaurante Atualizado");
+        restauranteDTO.setCep("24355220");
+        restauranteDTO.setLogradouro("Rua B");
+        restauranteDTO.setBairro("Bairro C");
+        restauranteDTO.setCidade("Cidade D");
+        restauranteDTO.setUf("UF");
+
+        when(restauranteService.updateRestaurante(any(UUID.class), any(RestauranteDTO.class))).thenReturn(restauranteDTO);
+
+        mockMvc.perform(put("/restaurantes/{id}", restauranteId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + restauranteId + "\",\"nome\":\"Restaurante Atualizado\",\"cep\":\"24355220\",\"logradouro\":\"Rua B\",\"bairro\":\"Bairro C\",\"cidade\":\"Cidade D\",\"uf\":\"UF\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(restauranteId.toString()))
+                .andExpect(jsonPath("$.nome").value("Restaurante Atualizado"))
+                .andExpect(jsonPath("$.cep").value("24355220"))
+                .andExpect(jsonPath("$.logradouro").value("Rua B"))
+                .andExpect(jsonPath("$.bairro").value("Bairro C"))
+                .andExpect(jsonPath("$.cidade").value("Cidade D"))
+                .andExpect(jsonPath("$.uf").value("UF"));
     }
 }

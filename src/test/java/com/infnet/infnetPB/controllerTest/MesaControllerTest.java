@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -107,4 +109,45 @@ public class MesaControllerTest {
                 .andExpect(jsonPath("$[0].id").value(mesaHistoryId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(mesaHistoryId2.toString()));
     }
+
+    @Test
+    public void testUpdateMesa() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        MesaDTO mesaDTO = new MesaDTO();
+        mesaDTO.setId(mesaId);
+        mesaDTO.setInfoAdicional("Mesa reformada");
+
+        when(mesaService.updateMesa(any(UUID.class), any(MesaDTO.class))).thenReturn(mesaDTO);
+
+        mockMvc.perform(put("/mesas/{id}", mesaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + mesaId + "\",\"infoAdicional\":\"Mesa reformada\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(mesaId.toString()))
+                .andExpect(jsonPath("$.infoAdicional").value("Mesa reformada"));
+    }
+
+    @Test
+    public void testDeleteMesa() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/mesas/{id}", mesaId))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testGetMesaById() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        MesaDTO mesaDTO = new MesaDTO();
+        mesaDTO.setId(mesaId);
+        mesaDTO.setInfoAdicional("Mesa no canto do bar");
+
+        when(mesaService.getMesaById(mesaId)).thenReturn(mesaDTO);
+
+        mockMvc.perform(get("/mesas/{id}", mesaId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(mesaId.toString()))
+                .andExpect(jsonPath("$.infoAdicional").value("Mesa no canto do bar"));
+    }
+
 }

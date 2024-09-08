@@ -37,9 +37,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,19 +51,19 @@ public class ReservaControllerTest {
     @Mock
     private ReservaService reservaService;
 
-    @MockBean
+    @Mock
     private MesaRepository mesaRepository;
 
-    @MockBean
+    @Mock
     private RestauranteRepository restauranteRepository;
 
-    @MockBean
+    @Mock
     private ReservaRepository reservaRepository;
 
-    @MockBean
+    @Mock
     private RabbitTemplate rabbitTemplate;
 
-    @MockBean
+    @Mock
     private NotificationClient notificationClient;
 
     @InjectMocks
@@ -179,4 +177,46 @@ public class ReservaControllerTest {
                 .andExpect(jsonPath("$[0].id").value(historyId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(historyId2.toString()));
     }
+
+    @Test
+    public void testUpdateReserva() throws Exception {
+        UUID reservaId = UUID.randomUUID();
+        UUID mesaId = UUID.randomUUID();
+        UUID restauranteId = UUID.randomUUID();
+
+        ReservaDTO reservaDTO = new ReservaDTO();
+        reservaDTO.setId(reservaId);
+        reservaDTO.setMesaId(mesaId);
+        reservaDTO.setRestauranteId(restauranteId);
+        reservaDTO.setQuantidadePessoas(4);
+        reservaDTO.setDataReserva(LocalDate.now());
+
+        Mesa mesa = new Mesa();
+        mesa.setId(mesaId);
+
+        Restaurante restaurante = new Restaurante();
+        restaurante.setId(restauranteId);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(reservaId);
+        reserva.setMesa(mesa);
+        reserva.setRestaurante(restaurante);
+        reserva.setQuantidadePessoas(reservaDTO.getQuantidadePessoas());
+        reserva.setDataReserva(reservaDTO.getDataReserva());
+
+        when(mesaRepository.findById(mesaId)).thenReturn(Optional.of(mesa));
+        when(restauranteRepository.findById(restauranteId)).thenReturn(Optional.of(restaurante));
+        when(reservaRepository.findById(reservaId)).thenReturn(Optional.of(reserva));
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+
+        when(reservaService.updateReserva(any(UUID.class), any(ReservaDTO.class))).thenReturn(reservaDTO);
+
+        mockMvc.perform(put("/reservas/{id}", reservaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + reservaId + "\",\"mesaId\":\"" + mesaId + "\",\"restauranteId\":\"" + restauranteId + "\",\"quantidadePessoas\":\"4\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(reservaId.toString()))
+                .andExpect(jsonPath("$.quantidadePessoas").value(4));
+    }
+
 }

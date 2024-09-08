@@ -37,6 +37,12 @@ public class PedidoController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<PedidoDTO> updatePedido(@PathVariable UUID id, @RequestBody PedidoDTO pedidoDTO) {
+        PedidoDTO updatedPedido = pedidoService.updatePedido(id, pedidoDTO);
+        return new ResponseEntity<>(updatedPedido, HttpStatus.OK);
+    }
+
     @GetMapping("/historico")
     public ResponseEntity<List<PedidoHistory>> getAllPedidoHistory() {
         List<PedidoHistory> history = pedidoService.getAllPedidoHistories();

@@ -26,6 +26,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,4 +117,22 @@ public class PedidoControllerTest {
                 .andExpect(jsonPath("$[0].id").value(historyId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(historyId2.toString()));
     }
+    @Test
+    public void testUpdatePedido() throws Exception {
+        UUID pedidoId = UUID.randomUUID();
+        PedidoDTO pedidoDTO = new PedidoDTO();
+        pedidoDTO.setId(pedidoId);
+        pedidoDTO.setDescricaoPedido("Pedido atualizado");
+
+        when(pedidoService.updatePedido(any(UUID.class), any(PedidoDTO.class))).thenReturn(pedidoDTO);
+
+        mockMvc.perform(put("/pedidos/{id}", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + pedidoId + "\",\"descricaoPedido\":\"Pedido atualizado\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(pedidoId.toString()))
+                .andExpect(jsonPath("$.descricaoPedido").value("Pedido atualizado"));
+    }
+
+
 }

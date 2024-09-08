@@ -132,6 +132,20 @@ public class ReservaService {
                 .collect(Collectors.toList());
     }
 
+    public ReservaDTO updateReserva(UUID id, ReservaDTO reservaDTO) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+
+        reserva.setDataReserva(reservaDTO.getDataReserva());
+        reserva.setQuantidadePessoas(reservaDTO.getQuantidadePessoas());
+
+        Reserva updatedReserva = reservaRepository.save(reserva);
+        saveReservaHistory(updatedReserva, "UPDATE");
+
+        return mapToDTO(updatedReserva);
+    }
+
+
     public ReservaDTO getReservaById(UUID id) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
@@ -139,7 +153,11 @@ public class ReservaService {
     }
 
     public void deleteReservaById(UUID id) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+
         reservaRepository.deleteById(id);
+        saveReservaHistory(reserva, "DELETE");
     }
 
     public List<ReservaHistory> getAllReservaHistories() {
