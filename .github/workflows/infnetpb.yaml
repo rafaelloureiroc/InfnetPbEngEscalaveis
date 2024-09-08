@@ -30,6 +30,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven
 
+
       - name: Grant execute permission for Maven Wrapper
         run: chmod +x ./mvnw
 
@@ -65,9 +66,12 @@ jobs:
       - name: Deploy to Kubernetes
         run: kubectl apply -f Kubernetes/infnetpb-deployment.yaml
 
-      - name: Get Service Information
+      - name: Wait for Pods to be Ready
         run: |
-          minikube service infnetpb-service --url
+          kubectl rollout status deployment/infnetpb-deployment
+          kubectl get pods
 
-      - name: Port Forward Service
-        run: kubectl port-forward svc/infnetpb-service 8080:8080 &
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(kubectl get service infnetpb-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Service URL: http://$SERVICE_URL:8080"
