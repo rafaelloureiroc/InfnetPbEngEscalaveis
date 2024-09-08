@@ -84,7 +84,7 @@ jobs:
 
       - name: Test Service (POST)
         run: |
-          curl -X POST http://localhost:8080/restaurantes \-H "Content-Type: application/json" \-d '{"nome": "Restaurante Da carminea","localizacao": "Rua Principal, 123","cep": 24355210}'
+          curl -X POST http://localhost:8080/restaurantes \-H "Content-Type: application/json" \-d '{"nome": "Restaurante Da carminea","cep": 24355210}'
            sleep 5
       - name: Test Service(GET)
         run: |
