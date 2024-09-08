@@ -8,6 +8,7 @@ import CadastrarReserva from './components/CadastroReserva';
 import Login from './components/Login';
 import Register from './components/Register';
 import Notifications from './components/Notifications';
+import ListarRestaurantes from './components/RestauranteList';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -19,6 +20,7 @@ function App() {
     const [showCadastrarMesa, setShowCadastrarMesa] = useState(false);
     const [showCadastrarPedido, setShowCadastrarPedido] = useState(false);
     const [showCadastrarReserva, setShowCadastrarReserva] = useState(false);
+    const [showListarRestaurantes, setShowListarRestaurantes] = useState(false);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -75,6 +77,7 @@ function App() {
         setShowCadastrarMesa(false);
         setShowCadastrarPedido(false);
         setShowCadastrarReserva(false);
+        setShowListarRestaurantes(false);
     };
 
     const renderButtons = () => {
@@ -87,6 +90,7 @@ function App() {
                         setShowCadastrarMesa(false);
                         setShowCadastrarPedido(false);
                         setShowCadastrarReserva(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Cadastrar Restaurante
                     </button>
@@ -96,6 +100,7 @@ function App() {
                         setShowCadastroRestaurante(false);
                         setShowCadastrarPedido(false);
                         setShowCadastrarReserva(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Cadastrar Mesa
                     </button>
@@ -105,8 +110,19 @@ function App() {
                         setShowCadastrarMesa(false);
                         setShowCadastrarPedido(false);
                         setShowCadastrarReserva(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Listar Mesas
+                    </button>
+                    <button onClick={() => {
+                        setShowListarRestaurantes(true);
+                        setShowCadastroRestaurante(false);
+                        setShowCadastrarMesa(false);
+                        setShowCadastrarPedido(false);
+                        setShowCadastrarReserva(false);
+                        setShowListarMesas(false);
+                    }}>
+                        Listar Restaurantes
                     </button>
                 </>
             );
@@ -120,6 +136,7 @@ function App() {
                         setShowCadastroRestaurante(false);
                         setShowCadastrarMesa(false);
                         setShowCadastrarPedido(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Cadastrar Reserva
                     </button>
@@ -129,6 +146,7 @@ function App() {
                         setShowCadastroRestaurante(false);
                         setShowCadastrarMesa(false);
                         setShowCadastrarReserva(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Cadastrar Pedido
                     </button>
@@ -138,9 +156,21 @@ function App() {
                         setShowCadastrarMesa(false);
                         setShowCadastrarPedido(false);
                         setShowCadastrarReserva(false);
+                        setShowListarRestaurantes(false);
                     }}>
                         Listar Mesas
                     </button>
+
+                     <button onClick={() => {
+                        setShowListarRestaurantes(true);
+                        setShowCadastroRestaurante(false);
+                        setShowCadastrarMesa(false);
+                        setShowCadastrarPedido(false);
+                        setShowCadastrarReserva(false);
+                        setShowListarMesas(false);
+                     }}>
+                        Listar Restaurantes
+                     </button>
                 </>
             );
         }
@@ -193,6 +223,7 @@ function App() {
             {showCadastrarMesa && <CadastrarMesa />}
             {showCadastrarPedido && <CadastrarPedido />}
             {showCadastrarReserva && <CadastrarReserva />}
+            {showListarRestaurantes && <ListarRestaurantes />}
             <Notifications />
         </div>
     );
