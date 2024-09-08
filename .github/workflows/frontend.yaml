@@ -83,11 +83,6 @@ jobs:
           SERVICE_URL=$(minikube service frontend-service --url)
           echo "Service URL: $SERVICE_URL"
 
-      - name: Port Forward
+      - name: Test Service URL
         run: |
-          kubectl port-forward svc/frontend-service 80:80 &
-          sleep 10
-
-      - name: Test Frontend (GET)
-        run: |
-          curl http://localhost:80
+          curl $SERVICE_URL
