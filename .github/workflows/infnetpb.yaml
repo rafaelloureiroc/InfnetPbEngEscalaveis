@@ -46,9 +46,6 @@ jobs:
       - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/infnetpb:latest .
 
-      - name: Tag Docker image
-        run: docker tag infnetpb:latest ${{ secrets.DOCKER_HUB_USERNAME }}/infnetpb:latest
-
       - name: Push Docker image to Docker Hub
         run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/infnetpb:latest
 
