@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
+          distribution: 'temurin'
 
       - name: Cache Maven packages
         uses: actions/cache@v2
@@ -51,6 +52,3 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f Kubernetes/infnetpb-deployment.yaml
-
-      - name: Port Forward Service
-        run: kubectl port-forward svc/infnetpb-service 8080:8080
