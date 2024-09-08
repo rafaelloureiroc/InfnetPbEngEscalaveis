@@ -69,10 +69,16 @@ jobs:
           kubectl get deployments
           kubectl get services
 
-      - name: Wait for Service to be Available
-        run: sleep 30
-
       - name: Get Service URL
         run: |
-          minikube service infnetpb-service --url
-          kubectl port-forward svc/infnetpb-service 8080:8080
+            SERVICE_URL=$(minikube service infnetpb-service --url)
+            echo "Service URL: $SERVICE_URL"
+
+      - name: Port Forward
+        run: |
+            kubectl port-forward svc/infnetpb-service 8080:8080 &
+            sleep 10
+
+      - name: Test Service
+        run: |
+            curl http://localhost:8080/mesas
