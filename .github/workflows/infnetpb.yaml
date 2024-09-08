@@ -82,8 +82,10 @@ jobs:
             kubectl port-forward svc/infnetpb-service 8080:8080 &
             sleep 10
 
-      - name: Test Service
+      - name: Test Service (POST)
         run: |
           curl -X POST http://localhost:8080/restaurantes \-H "Content-Type: application/json" \-d '{"nome": "Restaurante Da carminea","localizacao": "Rua Principal, 123","cep": 24355210}'
            sleep 5
-          curl http://localhost:8080/restaurantes
+      - name: Test Service(GET)
+        run: |
+          curl http://localhost:8080/mesas
