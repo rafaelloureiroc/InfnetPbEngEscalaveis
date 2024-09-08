@@ -69,4 +69,4 @@ jobs:
 
       - name: Get Service Information
         run: |
-          kubectl get svc infnetpb-service -o jsonpath='{.spec.ports[0].nodePort}'
+          kubectl get svc infnetpb-service
