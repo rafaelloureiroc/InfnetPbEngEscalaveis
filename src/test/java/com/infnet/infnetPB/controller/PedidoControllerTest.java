@@ -1,7 +1,6 @@
-package com.infnet.infnetPB.controllerTest;
+package com.infnet.infnetPB.controller;
 
 import com.infnet.infnetPB.DTO.PedidoDTO;
-import com.infnet.infnetPB.controller.PedidoController;
 import com.infnet.infnetPB.model.history.PedidoHistory;
 import com.infnet.infnetPB.service.PedidoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -66,6 +64,16 @@ public class PedidoControllerTest {
     }
 
     @Test
+    public void testCreatePedidoFailure() throws Exception {
+        when(pedidoService.createPedido(any(PedidoDTO.class))).thenThrow(new RuntimeException());
+
+        mockMvc.perform(post("/pedidos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"descricaoPedido\":\"Pedido 1\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void testGetAllPedidos() throws Exception {
         PedidoDTO pedido1 = new PedidoDTO();
         UUID pedidoId1 = UUID.randomUUID();
@@ -99,6 +107,15 @@ public class PedidoControllerTest {
     }
 
     @Test
+    public void testDeletePedidoByIdFailure() throws Exception {
+        UUID pedidoId = UUID.randomUUID();
+        doThrow(new RuntimeException()).when(pedidoService).deletePedidoById(pedidoId);
+
+        mockMvc.perform(delete("/pedidos/" + pedidoId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testGetAllPedidoHistory() throws Exception {
         PedidoHistory history1 = new PedidoHistory();
         UUID historyId1 = UUID.randomUUID();
@@ -117,6 +134,7 @@ public class PedidoControllerTest {
                 .andExpect(jsonPath("$[0].id").value(historyId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(historyId2.toString()));
     }
+
     @Test
     public void testUpdatePedido() throws Exception {
         UUID pedidoId = UUID.randomUUID();
@@ -134,5 +152,18 @@ public class PedidoControllerTest {
                 .andExpect(jsonPath("$.descricaoPedido").value("Pedido atualizado"));
     }
 
+    @Test
+    public void testUpdatePedidoFailure() throws Exception {
+        UUID pedidoId = UUID.randomUUID();
+        PedidoDTO pedidoDTO = new PedidoDTO();
+        pedidoDTO.setId(pedidoId);
+        pedidoDTO.setDescricaoPedido("Pedido atualizado");
 
+        when(pedidoService.updatePedido(any(UUID.class), any(PedidoDTO.class))).thenThrow(new RuntimeException());
+
+        mockMvc.perform(put("/pedidos/{id}", pedidoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + pedidoId + "\",\"descricaoPedido\":\"Pedido atualizado\"}"))
+                .andExpect(status().isNotFound());
+    }
 }

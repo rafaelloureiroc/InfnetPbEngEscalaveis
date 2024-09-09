@@ -21,8 +21,12 @@ public class ReservaController {
 
     @PostMapping
     public ResponseEntity<ReservaDTO> createReserva(@RequestBody ReservaDTO reservaDTO) {
-        ReservaDTO createdReserva = reservaService.createReserva(reservaDTO);
-        return new ResponseEntity<>(createdReserva, HttpStatus.CREATED);
+        try {
+            ReservaDTO createdReserva = reservaService.createReserva(reservaDTO);
+            return new ResponseEntity<>(createdReserva, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping
@@ -31,17 +35,34 @@ public class ReservaController {
         return new ResponseEntity<>(reservas, HttpStatus.OK);
     }
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservaById(@PathVariable UUID id) {
-        reservaService.deleteReservaById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservaDTO> getReservaById(@PathVariable UUID id) {
+        try {
+            ReservaDTO reservaDTO = reservaService.getReservaById(id);
+            return new ResponseEntity<>(reservaDTO, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ReservaDTO> updateReserva(@PathVariable UUID id, @RequestBody ReservaDTO reservaDTO) {
-        ReservaDTO updatedReserva = reservaService.updateReserva(id, reservaDTO);
-        return new ResponseEntity<>(updatedReserva, HttpStatus.OK);
+        try {
+            ReservaDTO updatedReserva = reservaService.updateReserva(id, reservaDTO);
+            return new ResponseEntity<>(updatedReserva, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReservaById(@PathVariable UUID id) {
+        try {
+            reservaService.deleteReservaById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/historico")

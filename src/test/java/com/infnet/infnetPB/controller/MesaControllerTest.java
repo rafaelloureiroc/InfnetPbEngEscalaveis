@@ -1,7 +1,6 @@
-package com.infnet.infnetPB.controllerTest;
+package com.infnet.infnetPB.controller;
 
 import com.infnet.infnetPB.DTO.MesaDTO;
-import com.infnet.infnetPB.controller.MesaController;
 import com.infnet.infnetPB.model.history.MesaHistory;
 import com.infnet.infnetPB.service.MesaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -66,8 +66,86 @@ public class MesaControllerTest {
     }
 
     @Test
-    public void testGetAllMesas() throws Exception {
+    public void testCreateMesaFailure() throws Exception {
+        when(mesaService.createMesa(any(MesaDTO.class))).thenThrow(new RuntimeException());
 
+        mockMvc.perform(post("/mesas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"infoAdicional\":\"Mesa no canto do bar\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUpdateMesa() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        MesaDTO mesaDTO = new MesaDTO();
+        mesaDTO.setId(mesaId);
+        mesaDTO.setInfoAdicional("Mesa reformada");
+
+        when(mesaService.updateMesa(any(UUID.class), any(MesaDTO.class))).thenReturn(mesaDTO);
+
+        mockMvc.perform(put("/mesas/{id}", mesaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\"" + mesaId + "\",\"infoAdicional\":\"Mesa reformada\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(mesaId.toString()))
+                .andExpect(jsonPath("$.infoAdicional").value("Mesa reformada"));
+    }
+
+    @Test
+    public void testUpdateMesaFailure() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        when(mesaService.updateMesa(any(UUID.class), any(MesaDTO.class))).thenThrow(new RuntimeException());
+
+        mockMvc.perform(put("/mesas/{id}", mesaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"infoAdicional\":\"Mesa reformada\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteMesa() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/mesas/{id}", mesaId))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void testDeleteMesaFailure() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        doThrow(new RuntimeException()).when(mesaService).deleteMesaById(mesaId);
+
+        mockMvc.perform(delete("/mesas/{id}", mesaId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testGetMesaById() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        MesaDTO mesaDTO = new MesaDTO();
+        mesaDTO.setId(mesaId);
+        mesaDTO.setInfoAdicional("Mesa no canto do bar");
+
+        when(mesaService.getMesaById(mesaId)).thenReturn(mesaDTO);
+
+        mockMvc.perform(get("/mesas/{id}", mesaId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(mesaId.toString()))
+                .andExpect(jsonPath("$.infoAdicional").value("Mesa no canto do bar"));
+    }
+
+    @Test
+    public void testGetMesaByIdFailure() throws Exception {
+        UUID mesaId = UUID.randomUUID();
+        when(mesaService.getMesaById(mesaId)).thenThrow(new RuntimeException());
+
+        mockMvc.perform(get("/mesas/{id}", mesaId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testGetAllMesas() throws Exception {
         MesaDTO mesa1 = new MesaDTO();
         UUID mesaId1 = UUID.randomUUID();
         mesa1.setId(mesaId1);
@@ -108,46 +186,6 @@ public class MesaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(mesaHistoryId1.toString()))
                 .andExpect(jsonPath("$[1].id").value(mesaHistoryId2.toString()));
-    }
-
-    @Test
-    public void testUpdateMesa() throws Exception {
-        UUID mesaId = UUID.randomUUID();
-        MesaDTO mesaDTO = new MesaDTO();
-        mesaDTO.setId(mesaId);
-        mesaDTO.setInfoAdicional("Mesa reformada");
-
-        when(mesaService.updateMesa(any(UUID.class), any(MesaDTO.class))).thenReturn(mesaDTO);
-
-        mockMvc.perform(put("/mesas/{id}", mesaId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"" + mesaId + "\",\"infoAdicional\":\"Mesa reformada\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(mesaId.toString()))
-                .andExpect(jsonPath("$.infoAdicional").value("Mesa reformada"));
-    }
-
-    @Test
-    public void testDeleteMesa() throws Exception {
-        UUID mesaId = UUID.randomUUID();
-
-        mockMvc.perform(delete("/mesas/{id}", mesaId))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    public void testGetMesaById() throws Exception {
-        UUID mesaId = UUID.randomUUID();
-        MesaDTO mesaDTO = new MesaDTO();
-        mesaDTO.setId(mesaId);
-        mesaDTO.setInfoAdicional("Mesa no canto do bar");
-
-        when(mesaService.getMesaById(mesaId)).thenReturn(mesaDTO);
-
-        mockMvc.perform(get("/mesas/{id}", mesaId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(mesaId.toString()))
-                .andExpect(jsonPath("$.infoAdicional").value("Mesa no canto do bar"));
     }
 
 }

@@ -21,8 +21,12 @@ public class RestauranteController {
 
     @PostMapping
     public ResponseEntity<RestauranteDTO> createRestaurante(@RequestBody RestauranteDTO restauranteDTO) {
+        try {
         RestauranteDTO createdRestaurante = restauranteService.createRestaurante(restauranteDTO);
         return new ResponseEntity<>(createdRestaurante, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping
@@ -33,14 +37,22 @@ public class RestauranteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRestauranteById(@PathVariable UUID id) {
+        try {
         restauranteService.deleteRestauranteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RestauranteDTO> updateRestaurante(@PathVariable UUID id, @RequestBody RestauranteDTO restauranteDTO) {
+        try {
         RestauranteDTO updatedRestaurante = restauranteService.updateRestaurante(id, restauranteDTO);
         return new ResponseEntity<>(updatedRestaurante, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/historico")

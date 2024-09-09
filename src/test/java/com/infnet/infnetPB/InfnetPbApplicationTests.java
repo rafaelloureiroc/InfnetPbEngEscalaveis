@@ -1,9 +1,9 @@
 package com.infnet.infnetPB;
 
-import com.infnet.infnetPB.controllerTest.MesaControllerTest;
-import com.infnet.infnetPB.controllerTest.PedidoControllerTest;
-import com.infnet.infnetPB.controllerTest.ReservaControllerTest;
-import com.infnet.infnetPB.controllerTest.RestauranteControllerTest;
+import com.infnet.infnetPB.controller.MesaControllerTest;
+import com.infnet.infnetPB.controller.PedidoControllerTest;
+import com.infnet.infnetPB.controller.ReservaControllerTest;
+import com.infnet.infnetPB.controller.RestauranteControllerTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -20,6 +20,10 @@ class InfnetPbApplicationTests {
 		mesaControllerTest.testDeleteMesa();
 		mesaControllerTest.testUpdateMesa();
 		mesaControllerTest.testGetMesaById();
+		mesaControllerTest.testCreateMesaFailure();
+		mesaControllerTest.testGetMesaByIdFailure();
+		mesaControllerTest.testDeleteMesaFailure();
+		mesaControllerTest.testUpdateMesaFailure();
 	}
 	@Test
 	void testPedidoController() throws Exception {
@@ -30,6 +34,9 @@ class InfnetPbApplicationTests {
 		pedidoControllerTest.testGetAllPedidoHistory();
 		pedidoControllerTest.testDeletePedidoById();
 		pedidoControllerTest.testUpdatePedido();
+		pedidoControllerTest.testCreatePedidoFailure();
+		pedidoControllerTest.testDeletePedidoByIdFailure();
+		pedidoControllerTest.testUpdatePedidoFailure();
 	}
 
 	@Test
@@ -41,6 +48,11 @@ class InfnetPbApplicationTests {
 		reservaControllerTest.testGetAllReservaHistories();
 		reservaControllerTest.testDeleteReservaById();
 		reservaControllerTest.testUpdateReserva();
+		reservaControllerTest.testGetReservaById();
+		reservaControllerTest.testCreateReservaFailure();
+		reservaControllerTest.testDeleteReservaByIdFailure();
+		reservaControllerTest.testGetReservaByIdNotFound();
+		reservaControllerTest.testUpdateReservaFailure();
 	}
 
 	@Test
@@ -52,5 +64,8 @@ class InfnetPbApplicationTests {
 		restauranteControllerTest.testGetAllRestauranteHistories();
 		restauranteControllerTest.testDeleteRestauranteById();
 		restauranteControllerTest.testUpdateRestaurante();
+		restauranteControllerTest.testCreateRestaurante_Failure();
+		restauranteControllerTest.testUpdateRestaurante_Failure();
+		restauranteControllerTest.testDeleteRestauranteById_Failure();
 	}
 }

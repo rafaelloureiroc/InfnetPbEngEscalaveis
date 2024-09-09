@@ -25,14 +25,22 @@ public class MesaController {
 
     @PostMapping
     public ResponseEntity<MesaDTO> createMesa(@RequestBody MesaDTO mesaDTO) {
-        MesaDTO createdMesa = mesaService.createMesa(mesaDTO);
-        return new ResponseEntity<>(createdMesa, HttpStatus.CREATED);
+        try {
+            MesaDTO createdMesa = mesaService.createMesa(mesaDTO);
+            return new ResponseEntity<>(createdMesa, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<MesaDTO> updateMesa(@PathVariable UUID id, @RequestBody MesaDTO mesaDTO) {
-        MesaDTO updatedMesa = mesaService.updateMesa(id, mesaDTO);
-        return new ResponseEntity<>(updatedMesa, HttpStatus.OK);
+        try {
+            MesaDTO updatedMesa = mesaService.updateMesa(id, mesaDTO);
+            return new ResponseEntity<>(updatedMesa, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping

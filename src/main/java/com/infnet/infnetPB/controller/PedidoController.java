@@ -21,8 +21,12 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<PedidoDTO> createPedido(@RequestBody PedidoDTO pedidoDTO) {
-        PedidoDTO createdPedido = pedidoService.createPedido(pedidoDTO);
-        return new ResponseEntity<>(createdPedido, HttpStatus.CREATED);
+        try {
+            PedidoDTO createdPedido = pedidoService.createPedido(pedidoDTO);
+            return new ResponseEntity<>(createdPedido, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping
@@ -33,18 +37,26 @@ public class PedidoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePedidoById(@PathVariable UUID id) {
-        pedidoService.deletePedidoById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        try {
+            pedidoService.deletePedidoById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PedidoDTO> updatePedido(@PathVariable UUID id, @RequestBody PedidoDTO pedidoDTO) {
-        PedidoDTO updatedPedido = pedidoService.updatePedido(id, pedidoDTO);
-        return new ResponseEntity<>(updatedPedido, HttpStatus.OK);
+        try {
+            PedidoDTO updatedPedido = pedidoService.updatePedido(id, pedidoDTO);
+            return new ResponseEntity<>(updatedPedido, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/historico")
-    public ResponseEntity<List<PedidoHistory>> getAllPedidoHistory() {
+    public ResponseEntity<List<PedidoHistory>> getAllPedidoHistories() {
         List<PedidoHistory> history = pedidoService.getAllPedidoHistories();
         return new ResponseEntity<>(history, HttpStatus.OK);
     }

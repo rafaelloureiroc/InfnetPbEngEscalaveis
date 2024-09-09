@@ -1,7 +1,6 @@
-package com.infnet.infnetPB.controllerTest;
+package com.infnet.infnetPB.controller;
 
 import com.infnet.infnetPB.DTO.RestauranteDTO;
-import com.infnet.infnetPB.controller.RestauranteController;
 import com.infnet.infnetPB.model.history.RestauranteHistory;
 import com.infnet.infnetPB.service.RestauranteService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -171,5 +169,43 @@ public class RestauranteControllerTest {
                 .andExpect(jsonPath("$.bairro").value("Bairro C"))
                 .andExpect(jsonPath("$.cidade").value("Cidade D"))
                 .andExpect(jsonPath("$.uf").value("UF"));
+    }
+
+    @Test
+    public void testCreateRestaurante_Failure() throws Exception {
+        when(restauranteService.createRestaurante(any(RestauranteDTO.class))).thenThrow(new RuntimeException());
+
+        mockMvc.perform(post("/restaurantes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"Restaurante 1\",\"cep\":\"24355210\",\"logradouro\":\"Rua A\",\"bairro\":\"Bairro B\",\"cidade\":\"Cidade C\",\"uf\":\"UF\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testDeleteRestauranteById_Failure() throws Exception {
+        UUID restauranteId = UUID.randomUUID();
+        doThrow(new RuntimeException()).when(restauranteService).deleteRestauranteById(restauranteId);
+
+        mockMvc.perform(delete("/restaurantes/" + restauranteId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testUpdateRestaurante_Failure() throws Exception {
+        UUID restauranteId = UUID.randomUUID();
+        RestauranteDTO restauranteDTO = new RestauranteDTO();
+        restauranteDTO.setNome("Restaurante Atualizado");
+        restauranteDTO.setCep("24355220");
+        restauranteDTO.setLogradouro("Rua B");
+        restauranteDTO.setBairro("Bairro C");
+        restauranteDTO.setCidade("Cidade D");
+        restauranteDTO.setUf("UF");
+
+        when(restauranteService.updateRestaurante(any(UUID.class), any(RestauranteDTO.class))).thenThrow(new RuntimeException());
+
+        mockMvc.perform(put("/restaurantes/{id}", restauranteId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"Restaurante Atualizado\",\"cep\":\"24355220\",\"logradouro\":\"Rua B\",\"bairro\":\"Bairro C\",\"cidade\":\"Cidade D\",\"uf\":\"UF\"}"))
+                .andExpect(status().isNotFound());
     }
 }
