@@ -1,9 +1,6 @@
 package com.infnet.infnetPB.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -19,7 +16,7 @@ public class Reserva {
     private LocalDate dataReserva;
     private int quantidadePessoas;
 
-    @ManyToOne
+    @OneToOne
     private Mesa mesa;
 
     @ManyToOne

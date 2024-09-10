@@ -20,7 +20,7 @@ public class Mesa {
     @ManyToOne
     private Restaurante restaurante;
 
-    @ManyToOne
+    @OneToOne
     private Reserva reserva;
 
     @OneToOne(mappedBy = "mesa")
