@@ -12,6 +12,7 @@ public class MesaDTO {
     private int qtdAssentosMax;
     private String infoAdicional;
     private UUID restauranteId;
+    private UUID reservaId;
     private String NomeRestaurante;
     private List<String> pedidos;
     private String status;

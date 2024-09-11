@@ -8,7 +8,7 @@ function MesaList() {
   useEffect(() => {
     async function fetchMesas() {
       try {
-        const response = await axios.get('http://localhost:8080/mesas');
+        const response = await axios.get('http://localhost:8082/mesas');
         setMesas(response.data);
         setCarregando(false);
       } catch (error) {

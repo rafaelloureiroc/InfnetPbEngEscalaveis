@@ -10,7 +10,7 @@ const CadastrarMesa = () => {
     useEffect(() => {
         const fetchRestaurantes = async () => {
             try {
-                const response = await fetch('http://localhost:8080/restaurantes');
+                const response = await fetch('http://localhost:8083/restaurantes');
                 if (response.ok) {
                     const data = await response.json();
                     setRestaurantes(data);
@@ -25,39 +25,45 @@ const CadastrarMesa = () => {
         fetchRestaurantes();
     }, []);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+  const handleSubmit = async (event) => {
+      event.preventDefault();
 
-        const restauranteSelecionado = restaurantes.find(r => r.id === nomeRestaurante);
-        const infoAdicionalComRestaurante = `Restaurante: ${restauranteSelecionado?.nome} - ${infoAdicional} `;
+      const restauranteSelecionado = restaurantes.find(r => r.id === nomeRestaurante);
+      if (!restauranteSelecionado) {
+          setMessage('Restaurante selecionado é inválido.');
+          return;
+      }
 
-        const mesaData = {
-            qtdAssentosMax: parseInt(qtdAssentosMax),
-            infoAdicional: infoAdicionalComRestaurante,
-            restauranteId: nomeRestaurante
-        };
+      const infoAdicionalComRestaurante = `Restaurante: ${restauranteSelecionado.nome} - ${infoAdicional} `;
 
-        try {
-            const response = await fetch('http://localhost:8080/mesas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(mesaData)
-            });
+      const mesaData = {
+          qtdAssentosMax: parseInt(qtdAssentosMax),
+          infoAdicional: infoAdicionalComRestaurante,
+          restauranteId: nomeRestaurante
+      };
 
-            if (response.ok) {
-                const result = await response.json();
-                setMessage('Mesa cadastrada com sucesso!');
-                console.log('Mesa cadastrada:', result);
-            } else {
-                throw new Error('Erro ao cadastrar a mesa');
-            }
-        } catch (error) {
-            console.error('Erro:', error);
-            setMessage('Não foi possível cadastrar a mesa. Verifique o console para mais detalhes.');
-        }
-    };
+      try {
+          const response = await fetch('http://localhost:8082/mesas', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(mesaData)
+          });
+
+          if (response.ok) {
+              const result = await response.json();
+              setMessage('Mesa cadastrada com sucesso!');
+              console.log('Mesa cadastrada:', result);
+          } else {
+              const errorText = await response.text();
+              throw new Error(`Erro ao cadastrar a mesa: ${errorText}`);
+          }
+      } catch (error) {
+          console.error('Erro:', error);
+          setMessage('Não foi possível cadastrar a mesa. Verifique o console para mais detalhes.');
+      }
+  };
 
     return (
         <div>

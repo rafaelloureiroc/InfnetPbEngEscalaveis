@@ -10,11 +10,41 @@ services:
     networks:
       - my-network
 
-  infnetpb:
-    image: rafaelloureioc/infnetpb:42.0
-    container_name: infnetpb
+  restaurante-service:
+    image: rafaelloureioc/restaurante-service:3.0
+    container_name: restaurante-service
     ports:
-      - "8080:8080"
+      - "8083:8083"
+    networks:
+      - my-network
+    depends_on:
+      - rabbitmq
+
+  mesa-service:
+    image: rafaelloureioc/mesa-service:3.0
+    container_name: mesa-service
+    ports:
+      - "8082:8082"
+    networks:
+      - my-network
+    depends_on:
+      - rabbitmq
+
+  pedido-service:
+    image: rafaelloureioc/pedido-service:3.0
+    container_name: pedido-service
+    ports:
+      - "8085:8085"
+    networks:
+      - my-network
+    depends_on:
+      - rabbitmq
+
+  reserva-service:
+    image: rafaelloureioc/reserva-service:3.0
+    container_name: reserva-service
+    ports:
+      - "8084:8084"
     networks:
       - my-network
     depends_on:
@@ -22,7 +52,7 @@ services:
       - notifications
 
   notifications:
-    image: rafaelloureioc/notificationpb:8.0
+    image: rafaelloureioc/notificationpb:9.0
     container_name: notifications
     ports:
       - "8081:8081"

@@ -6,82 +6,50 @@ function Notifications() {
     const [notifications, setNotifications] = useState([]);
 
     useEffect(() => {
-        const socket = new SockJS('http://localhost:8080/ws');
-        const client = new Client({
-            webSocketFactory: () => socket,
-            connectHeaders: {},
-            debug: function (str) {
-                console.log('STOMP: ' + str);
-            },
-            onConnect: () => {
-                console.log('Connected to WebSocket');
+        const createClient = (url, topic, type) => {
+            const socket = new SockJS(url);
+            const client = new Client({
+                webSocketFactory: () => socket,
+                connectHeaders: {},
+                debug: function (str) {
+                    console.log('STOMP: ' + str);
+                },
+                onConnect: () => {
+                    console.log(`Connected to ${url}`);
+                    client.subscribe(topic, (message) => {
+                        if (message.body) {
+                            console.log(`Received ${type} message:`, message.body);
+                            const notification = { type, content: JSON.parse(message.body) };
+                            setNotifications((prevNotifications) => [...prevNotifications, notification]);
 
-                client.subscribe('/topic/mesaCadastrada', (message) => {
-                    if (message.body) {
-                        console.log('Received mesaCadastrada message:', message.body);
-                        const notification = { type: 'Mesa Cadastrada', content: JSON.parse(message.body) };
-                        setNotifications((prevNotifications) => [...prevNotifications, notification]);
+                            setTimeout(() => {
+                                setNotifications((prevNotifications) =>
+                                    prevNotifications.filter((notif) => notif !== notification)
+                                );
+                            }, 5000);
+                        }
+                    });
+                },
+                onStompError: (frame) => {
+                    console.error('Broker reported error: ', frame.headers['message']);
+                    console.error('Additional details: ', frame.body);
+                },
+            });
 
-                        setTimeout(() => {
-                            setNotifications((prevNotifications) =>
-                                prevNotifications.filter((notif) => notif !== notification)
-                            );
-                        }, 5000);
-                    }
-                });
+            client.activate();
 
-                client.subscribe('/topic/mesaReservada', (message) => {
-                    if (message.body) {
-                        console.log('Received mesaReservada message:', message.body);
-                        const notification = { type: 'Mesa Reservada', content: JSON.parse(message.body) };
-                        setNotifications((prevNotifications) => [...prevNotifications, notification]);
+            return client;
+        };
 
-                        setTimeout(() => {
-                            setNotifications((prevNotifications) =>
-                                prevNotifications.filter((notif) => notif !== notification)
-                            );
-                        }, 5000);
-                    }
-                });
-
-                client.subscribe('/topic/pedidoCriado', (message) => {
-                    if (message.body) {
-                        console.log('Received pedidoCriado message:', message.body);
-                        const notification = { type: 'Pedido Criado', content: JSON.parse(message.body) };
-                        setNotifications((prevNotifications) => [...prevNotifications, notification]);
-
-                        setTimeout(() => {
-                            setNotifications((prevNotifications) =>
-                                prevNotifications.filter((notif) => notif !== notification)
-                            );
-                        }, 5000);
-                    }
-                });
-
-                client.subscribe('/topic/restauranteCadastrado', (message) => {
-                    if (message.body) {
-                        console.log('Received restauranteCadastrado message:', message.body);
-                        const notification = { type: 'Restaurante Criado', content: JSON.parse(message.body) };
-                        setNotifications((prevNotifications) => [...prevNotifications, notification]);
-
-                        setTimeout(() => {
-                            setNotifications((prevNotifications) =>
-                                prevNotifications.filter((notif) => notif !== notification)
-                            );
-                        }, 5000);
-                    }
-                });
-            },
-            onStompError: (frame) => {
-                console.error('Broker reported error: ', frame.headers['message']);
-                console.error('Additional details: ', frame.body);
-            },
-        });
-
-        client.activate();
+        const clients = [
+            createClient('http://localhost:8082/ws', '/topic/mesaCadastrada', 'Mesa Cadastrada'),
+            createClient('http://localhost:8083/ws', '/topic/restauranteCadastrado', 'Restaurante Criado'),
+            createClient('http://localhost:8084/ws', '/topic/mesaReservada', 'Mesa Reservada'),
+            createClient('http://localhost:8085/ws', '/topic/pedidoCriado', 'Pedido Criado')
+        ];
 
         return () => {
-            client.deactivate();
+            clients.forEach(client => client.deactivate());
         };
     }, []);
 

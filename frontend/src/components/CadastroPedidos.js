@@ -13,7 +13,7 @@ const CadastrarPedido = () => {
     useEffect(() => {
         const fetchRestaurantes = async () => {
             try {
-                const response = await fetch('http://localhost:8080/restaurantes');
+                const response = await fetch('http://localhost:8083/restaurantes');
                 if (response.ok) {
                     const data = await response.json();
                     setRestaurantes(data);
@@ -27,7 +27,7 @@ const CadastrarPedido = () => {
 
         const fetchMesas = async () => {
             try {
-                const response = await fetch('http://localhost:8080/mesas');
+                const response = await fetch('http://localhost:8082/mesas');
                 if (response.ok) {
                     const data = await response.json();
                     setMesas(data);
@@ -69,7 +69,7 @@ const CadastrarPedido = () => {
         };
 
         try {
-            const response = await fetch('http://localhost:8080/pedidos', {
+            const response = await fetch('http://localhost:8085/pedidos', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
