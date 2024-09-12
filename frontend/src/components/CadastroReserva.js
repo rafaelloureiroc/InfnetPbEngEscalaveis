@@ -11,6 +11,7 @@ const CadastrarReserva = () => {
     const [filteredMesas, setFilteredMesas] = useState([]);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchRestaurantes = async () => {
@@ -80,7 +81,8 @@ const CadastrarReserva = () => {
             mesaId
         };
 
-        try {
+        try
+            setLoading(true)
             const response = await fetch('http://localhost:8084/reservas', {
                 method: 'POST',
                 headers: {
@@ -100,6 +102,9 @@ const CadastrarReserva = () => {
             console.error('Erro:', error);
             setMessage('Não foi possível cadastrar a reserva. Verifique o console para mais detalhes.');
         }
+        finally {
+                 setLoading(false);
+             }
     };
 
     return (
