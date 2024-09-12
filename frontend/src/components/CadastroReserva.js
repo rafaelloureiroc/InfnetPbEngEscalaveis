@@ -73,6 +73,7 @@ const CadastrarReserva = () => {
         }
 
         setError('');
+        setLoading(true);
 
         const reservaData = {
             quantidadePessoas: parseInt(quantidadePessoas, 10),
@@ -81,8 +82,7 @@ const CadastrarReserva = () => {
             mesaId
         };
 
-        try
-            setLoading(true)
+        try {
             const response = await fetch('http://localhost:8084/reservas', {
                 method: 'POST',
                 headers: {
@@ -101,10 +101,9 @@ const CadastrarReserva = () => {
         } catch (error) {
             console.error('Erro:', error);
             setMessage('Não foi possível cadastrar a reserva. Verifique o console para mais detalhes.');
+        } finally {
+            setLoading(false);
         }
-        finally {
-                 setLoading(false);
-             }
     };
 
     return (
@@ -163,7 +162,9 @@ const CadastrarReserva = () => {
                         ))}
                     </select>
                 </div>
-                <button type="submit">Cadastrar Reserva</button>
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Aguarde um pouco...' : 'Cadastrar Reserva'}
+                </button>
             </form>
             {message && <p>{message}</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}
