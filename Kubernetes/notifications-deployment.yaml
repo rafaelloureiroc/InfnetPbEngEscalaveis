@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: notifications
-          image: rafaelloureioc/notificationpb:8.0
+          image: rafaelloureioc/notificationpb:10.0
           ports:
             - containerPort: 8081
 ---

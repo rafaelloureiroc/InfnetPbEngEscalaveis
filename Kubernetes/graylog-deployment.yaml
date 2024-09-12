@@ -30,9 +30,9 @@ spec:
             - name: GRAYLOG_HTTP_CORS_ALLOW_ORIGIN
               value: "*"
             - name: GRAYLOG_ELASTICSEARCH_HOSTS
-              value: http://elasticsearch-service:9200
+              value: http://elasticsearch:9200
             - name: GRAYLOG_MONGO_URI
-              value: mongodb://mongo-service:27017/graylog
+              value: mongodb://mongo:27017/graylog
 ---
 apiVersion: v1
 kind: Service

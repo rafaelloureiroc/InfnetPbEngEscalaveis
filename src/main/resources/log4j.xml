@@ -2,9 +2,9 @@
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 <log4j:configuration>
         <appender name="graylog" class="org.graylog2.log.GelfAppender">
-                <param name="graylogHost" value="graylog-service"/> <!--localhost(local) ou graylog(docker) ou graylog-service(kuber)-->
+                <param name="graylogHost" value="localhost"/> <!--localhost(local) ou graylog(docker) ou graylog-service(kuber)-->
                 <param name="graylogPort" value="12201"/>
-                <param name="originHost" value="infnetpb-service"/> <!--localhost(local) ou infnetpb-service(kuber)-->
+                <param name="originHost" value="localhost"/> <!--localhost(local) ou infnetpb-service(kuber)-->
                 <param name="extractStacktrace" value="true"/>
                 <param name="addExtendedInformation" value="true"/>
                 <param name="facility" value="log4j"/>
